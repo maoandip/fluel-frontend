@@ -1,0 +1,58 @@
+.label {
+  display: block;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--c-muted, #96AAC0);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 8px;
+}
+
+.btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  background: var(--c-interactive, #111820);
+  border: 1px solid var(--c-border, #1C2530);
+  border-radius: 4px;
+  padding: 10px 14px;
+  cursor: pointer;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.btn:hover {
+  border-color: rgba(0, 255, 178, .2);
+  box-shadow: 0 0 10px rgba(0, 255, 178, .12);
+}
+
+.icon {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+.name {
+  flex: 1;
+  text-align: left;
+  font-family: var(--font-mono);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--c-text, #E2EDF8);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.chevron {
+  color: var(--c-dim);
+  flex-shrink: 0;
+  transition: color 0.15s;
+}
+
+.btn:hover .chevron {
+  color: var(--c-accent);
+}

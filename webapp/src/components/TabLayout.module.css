@@ -1,0 +1,65 @@
+.layout {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.content {
+  flex: 1;
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 16px;
+  animation: tabEnter 0.25s ease-out;
+}
+
+@keyframes tabEnter {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.nav {
+  display: flex;
+  align-items: stretch;
+  justify-content: space-around;
+  background: var(--c-bg);
+  border-top: 1px solid var(--c-border-subtle);
+  padding: 6px 0 env(safe-area-inset-bottom, 8px);
+  flex-shrink: 0;
+}
+
+.tabBtn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  flex: 1;
+  padding: 8px 0 6px;
+  background: transparent;
+  border: none;
+  border-top: 2px solid transparent;
+  cursor: pointer;
+  color: var(--c-muted);
+  transition: color 0.15s, border-color 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.tabBtnActive {
+  composes: tabBtn;
+  color: var(--c-accent);
+  border-top-color: var(--c-accent);
+}
+
+.tabLabel {
+  font-family: var(--font);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+}
+
+.tabLabelActive {
+  composes: tabLabel;
+  font-weight: 600;
+}

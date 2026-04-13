@@ -1,0 +1,102 @@
+
+.loadingCard {
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+  border-radius: 4px;
+  padding: 16px 20px;
+}
+
+.list {
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+  border-radius: 4px;
+  padding: 8px 16px;
+  max-height: calc(100vh - 140px);
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.txItem {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--c-border-subtle);
+}
+
+.txItem:last-child {
+  border-bottom: none;
+}
+
+.txTopRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.txRoute {
+  font-family: var(--font-mono);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--c-text);
+}
+
+.txArrow {
+  margin: 0 4px;
+  color: var(--c-dim);
+}
+
+.txStatus {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 999px;
+  text-transform: capitalize;
+}
+
+.txBottomRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.txChains {
+  font-size: 12px;
+  color: var(--c-dim);
+}
+
+.txTime {
+  font-size: 11px;
+  color: var(--c-dim);
+}
+
+.txHash {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--c-muted);
+  text-decoration: none;
+}
+
+.txHash:hover {
+  text-decoration: underline;
+}
+
+.txTool {
+  font-size: 11px;
+  color: var(--c-dim);
+  text-transform: capitalize;
+}
+
+.loadingMore {
+  text-align: center;
+  padding: 12px 0;
+  font-size: 12px;
+  color: var(--c-dim);
+}
+
+.endMarker {
+  text-align: center;
+  padding: 12px 0;
+  font-size: 11px;
+  color: var(--c-muted);
+}

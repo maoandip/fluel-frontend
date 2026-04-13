@@ -1,0 +1,27 @@
+.pill {
+  position: fixed;
+  bottom: calc(72px + env(safe-area-inset-bottom, 8px));
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 9000;
+  background: var(--c-surface);
+  color: var(--c-accent);
+  border: 1px solid rgba(0, 255, 178, 0.15);
+  font-family: var(--font);
+  font-size: 14px;
+  font-weight: 600;
+  padding: 10px 24px;
+  border-radius: 4px;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
+  max-width: 85vw;
+  text-align: center;
+  line-height: 1.4;
+  cursor: pointer;
+  animation: slideIn 0.25s ease-out;
+  -webkit-tap-highlight-color: transparent;
+}
+
+@keyframes slideIn {
+  from { transform: translateX(-50%) translateY(20px); opacity: 0; }
+  to   { transform: translateX(-50%) translateY(0); opacity: 1; }
+}

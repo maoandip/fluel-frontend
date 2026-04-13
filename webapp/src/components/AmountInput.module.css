@@ -1,0 +1,112 @@
+.wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.presetsRow {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.presetBtn {
+  padding: 6px 14px;
+  border-radius: 4px;
+  border: 1px solid var(--c-border);
+  background: rgba(0, 255, 178, 0.03);
+  color: var(--c-text);
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.presetBtn:hover {
+  background: rgba(0, 255, 178, 0.08);
+  border-color: rgba(0, 255, 178, .15);
+}
+
+.presetBtn:active {
+  background: rgba(0, 255, 178, 0.12);
+}
+
+.presetBtnActive {
+  composes: presetBtn;
+  border-color: var(--c-accent);
+  background: rgba(0, 255, 178, 0.1);
+  color: var(--c-accent);
+}
+
+.inputRow {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+  border-radius: 4px;
+  padding: 0 14px;
+  transition: border-color 0.2s;
+}
+
+.input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--c-text);
+  font-family: var(--font-mono);
+  font-size: 18px;
+  font-weight: 700;
+  padding: 12px 0;
+  width: 100%;
+  min-width: 0;
+}
+
+.suffix {
+  font-family: var(--font-mono);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--c-muted);
+  flex-shrink: 0;
+  padding-left: 8px;
+}
+
+.balanceRow {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--c-muted);
+}
+
+.balanceValue {
+  font-family: var(--font-mono);
+}
+
+.maxBtn {
+  background: rgba(0, 255, 178, 0.12);
+  border: none;
+  color: var(--c-accent);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  letter-spacing: 0.04em;
+  min-height: 32px;
+  transition: background .15s;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.maxBtn:hover {
+  background: rgba(0, 255, 178, 0.18);
+}
+
+.maxBtn:active {
+  background: rgba(0, 255, 178, 0.25);
+}

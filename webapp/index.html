@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://telegram.org; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' /api /prices">
+  <title>fluel</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <script src="https://telegram.org/js/telegram-web-app.js" defer></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap"
+    rel="stylesheet"
+  />
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    :root {
+      --bg: #080B10;
+      --text: #E2EDF8;
+      --hint: #96AAC0;
+      --link: #00FFB2;
+      --btn: #00FFB2;
+      --btn-text: #080B10;
+      --bg2: #111820;
+      --header: #080B10;
+      --accent: #00FFB2;
+      --secondary: #FF7A5C;
+      --destructive: #FF4444;
+      --subtitle: #96AAC0;
+      --section: #111820;
+      --section-header: #00FFB2;
+      --section-sep: #1C2530;
+      --green: #00FFB2;
+      --amber: #FF7A5C;
+      --radius: 4px;
+      --radius-sm: 4px;
+      --radius-xs: 4px;
+      --safe-bottom: env(safe-area-inset-bottom, 0px);
+      --mono: 'JetBrains Mono', monospace;
+      --font: 'Inter', sans-serif;
+      --font-heading: 'Inter', sans-serif;
+    }
+    html, body { height: 100%; overflow: hidden; }
+    body {
+      font-family: var(--font);
+      background: var(--bg);
+      color: var(--text);
+      display: flex;
+      flex-direction: column;
+      -webkit-user-select: none;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+      -webkit-font-smoothing: antialiased;
+    }
+    #root { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="module" src="/src/index.tsx"></script>
+</body>
+</html>

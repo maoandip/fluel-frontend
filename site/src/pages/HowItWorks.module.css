@@ -1,0 +1,335 @@
+/* Page-specific styles — shared layout from page.module.css */
+
+.hero {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: clamp(40px, 6vw, 80px) clamp(16px, 4vw, 48px) 0;
+}
+
+.subtitle {
+  font-size: 15px;
+  color: var(--color-dim);
+  max-width: 480px;
+  line-height: 1.6;
+}
+
+.wrapper {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 0 clamp(16px, 4vw, 48px) clamp(40px, 6vw, 80px);
+}
+
+/* Steps */
+.steps {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 40px 0 48px;
+}
+
+.step {
+  display: flex;
+  gap: 20px;
+  align-items: flex-start;
+  background: var(--color-panel);
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  padding: 24px;
+}
+
+.stepNum {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 4px;
+  background: rgba(0, 255, 178, .08);
+  border: 1px solid var(--color-border);
+  color: var(--color-accent);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  font-weight: 500;
+  flex-shrink: 0;
+}
+
+.stepBody { flex: 1; }
+
+.stepTitle {
+  font-family: 'Inter', sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--color-text);
+  margin-bottom: 8px;
+}
+
+.stepDesc {
+  font-size: 13px;
+  color: var(--color-dim);
+  line-height: 1.7;
+  margin-bottom: 0;
+}
+
+.stepBody code {
+  display: inline-block;
+  margin-top: 10px;
+}
+
+/* Section titles */
+.sectionTitle {
+  font-family: 'Inter', sans-serif;
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--color-text);
+  margin-top: 56px;
+  margin-bottom: 12px;
+}
+
+.sectionDesc {
+  font-size: 13px;
+  color: var(--color-dim);
+  line-height: 1.7;
+  margin-bottom: 24px;
+}
+
+/* Flow */
+.flow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 24px;
+  background: var(--color-panel);
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+}
+
+.flowBox {
+  padding: 10px 18px;
+  border-radius: 4px;
+  font-size: 13px;
+  font-weight: 500;
+  text-align: center;
+}
+
+.flowUser {
+  background: rgba(0, 255, 178, .06);
+  color: var(--color-accent);
+  border: 1px solid var(--color-border);
+}
+
+.flowDeposit {
+  background: rgba(0, 255, 178, .06);
+  color: var(--color-accent);
+  border: 1px solid var(--color-border);
+}
+
+.flowLifi {
+  background: rgba(255, 122, 92, .06);
+  color: var(--color-secondary);
+  border: 1px solid var(--color-border);
+}
+
+.flowDest {
+  background: rgba(0, 255, 178, .06);
+  color: var(--color-accent);
+  border: 1px solid var(--color-border);
+}
+
+.flowArrow { color: var(--color-muted); font-size: 16px; }
+
+/* Trust */
+.trustGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2px;
+}
+
+
+.trustCard {
+  background: var(--color-panel);
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  padding: 24px;
+}
+
+.trustIcon { color: var(--color-accent); margin-bottom: 12px; }
+
+.trustTitle {
+  font-family: 'Inter', sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--color-text);
+  margin-bottom: 8px;
+}
+
+.trustDesc {
+  font-size: 13px;
+  color: var(--color-dim);
+  line-height: 1.6;
+}
+
+/* Fees */
+.feeTable {
+  background: var(--color-panel);
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.feeRow {
+  display: flex;
+  justify-content: space-between;
+  padding: 14px 20px;
+  font-size: 13px;
+  color: var(--color-dim);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.feeRow:last-child { border-bottom: none; }
+
+.feeValue {
+  font-weight: 500;
+  color: var(--color-text);
+}
+
+.feeHeader {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+  background: rgba(0, 255, 178, .02);
+}
+
+.feeHighlight { background: rgba(255, 122, 92, .04); }
+.feeHighlight .feeValue { color: var(--color-secondary); }
+
+.feeNote {
+  font-size: 13px;
+  color: var(--color-muted);
+  margin-top: 12px;
+  line-height: 1.5;
+}
+
+.feeNote a {
+  color: var(--color-trust);
+}
+
+/* FAQ */
+.faq { margin-top: 16px; }
+
+.faqItem {
+  border-bottom: 1px solid var(--color-border);
+  padding: 20px 0;
+}
+
+.faqItem:last-child { border-bottom: none; }
+
+.faqQ {
+  font-family: 'Inter', sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--color-text);
+  margin-bottom: 8px;
+}
+
+.faqA {
+  font-size: 13px;
+  color: var(--color-dim);
+  line-height: 1.7;
+}
+
+/* CTA */
+.cta {
+  margin-top: 56px;
+  text-align: center;
+  padding: 48px 24px;
+  background: var(--color-panel);
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+}
+
+.ctaTitle {
+  font-family: 'Inter', sans-serif;
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--color-text);
+  margin-bottom: 8px;
+}
+
+.ctaDesc {
+  font-size: 13px;
+  color: var(--color-dim);
+  margin-bottom: 24px;
+}
+
+.ctaBtn {
+  display: inline-flex;
+  align-items: center;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-bg);
+  background: var(--color-accent);
+  padding: 12px 28px;
+  border-radius: 8px;
+  text-decoration: none;
+  transition: opacity .2s;
+}
+
+.ctaBtn:hover {
+  opacity: 0.85;
+  text-decoration: none;
+  color: var(--color-bg);
+}
+
+.riskNote {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--color-muted);
+  margin-top: 16px;
+  line-height: 1.5;
+  opacity: 0.7;
+}
+
+.riskNote a {
+  color: var(--color-muted);
+  text-decoration: underline;
+}
+
+@media (max-width: 768px) {
+  .step { flex-direction: column; gap: 12px; }
+  .trustGrid { grid-template-columns: 1fr; }
+  .flow { flex-direction: column; }
+  .ctaBtn { width: 100%; justify-content: center; }
+}
+
+@media (max-width: 480px) {
+  .step { padding: 20px 16px; }
+  .trustCard { padding: 20px 16px; }
+  .feeRow { padding: 12px 16px; }
+}
+
+/* Widescreen */
+@media (min-width: 1440px) {
+  .hero { max-width: 1280px; }
+  .wrapper { max-width: 1280px; }
+}
+
+@media (min-width: 2560px) {
+  .hero { max-width: 1600px; padding-left: 64px; padding-right: 64px; }
+  .wrapper { max-width: 1600px; padding-left: 64px; padding-right: 64px; }
+  .step { padding: 32px; }
+  .trustCard { padding: 32px; }
+}
+
+/* Tiny phone */
+@media (max-width: 360px) {
+  .feeRow { padding: 10px 12px; font-size: 12px; }
+  .flow { padding: 16px; gap: 8px; }
+  .flowBox { padding: 8px 12px; font-size: 12px; }
+}

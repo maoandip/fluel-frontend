@@ -1,0 +1,291 @@
+/* Chains page styles */
+
+.hero {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: clamp(40px, 6vw, 80px) clamp(16px, 4vw, 48px) 0;
+}
+
+.subtitle {
+  font-size: 15px;
+  color: var(--color-dim);
+  max-width: 520px;
+  line-height: 1.6;
+}
+
+.wrapper {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 0 clamp(16px, 4vw, 48px) clamp(40px, 6vw, 80px);
+}
+
+/* ── Controls ── */
+.controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 32px 0 12px;
+}
+
+.searchWrap {
+  flex: 1;
+  position: relative;
+}
+
+.search {
+  width: 100%;
+  font-family: var(--font-sans);
+  font-size: 14px;
+  color: var(--color-text);
+  background: var(--color-panel);
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  padding: 12px 40px 12px 16px;
+  outline: none;
+  transition: border-color .2s;
+  min-height: 44px;
+}
+
+.search::placeholder { color: var(--color-muted); }
+.search:focus { border-color: var(--color-accent); }
+
+.clearBtn {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  background: none;
+  border: none;
+  color: var(--color-muted);
+  cursor: pointer;
+  border-radius: 4px;
+  transition: color .15s, background .15s;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.clearBtn:hover {
+  color: var(--color-text);
+  background: rgba(0, 255, 178, .06);
+}
+
+.sortGroup {
+  display: flex;
+  gap: 2px;
+}
+
+.sortBtn {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--color-muted);
+  background: var(--color-panel);
+  border: 1px solid var(--color-border);
+  padding: 10px 16px;
+  cursor: pointer;
+  transition: border-color .2s, color .2s;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+}
+
+.sortBtn:first-child { border-radius: 4px 0 0 4px; }
+.sortBtn:last-child { border-radius: 0 4px 4px 0; }
+.sortBtn:hover { border-color: var(--color-accent); color: var(--color-dim); }
+
+.sortActive {
+  color: var(--color-accent);
+  border-color: var(--color-accent);
+  background: rgba(0, 255, 178, .04);
+}
+
+/* ── Count ── */
+.count {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--color-muted);
+  letter-spacing: 0.04em;
+  margin-bottom: 16px;
+}
+
+/* ── Grid ── */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 2px;
+}
+
+.loading {
+  text-align: center;
+  color: var(--color-muted);
+  font-family: var(--font-mono);
+  font-size: 13px;
+  padding: 40px;
+}
+
+/* ── Card ── */
+.card {
+  background: var(--color-panel);
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  padding: 16px;
+  transition: border-color .2s, transform .15s;
+}
+
+.card:hover {
+  transform: translateY(-1px);
+}
+
+.cardTop {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.chainIcon {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.chainInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.chainName {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--color-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.chainId {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--color-muted);
+  letter-spacing: 0.04em;
+}
+
+.cardBottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 12px;
+  border-top: 1px solid var(--color-border);
+}
+
+.gweiVal {
+  font-family: var(--font-mono);
+  font-size: clamp(16px, 2vw, 20px);
+  font-weight: 700;
+}
+
+.gweiUnit {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--color-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.levelBadge {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  border-radius: 999px;
+}
+
+.low { color: #3CE3AB; background: rgba(60, 227, 171, .08); border: 1px solid rgba(60, 227, 171, .15); }
+.mid { color: #FFB900; background: rgba(255, 185, 0, .08); border: 1px solid rgba(255, 185, 0, .15); }
+.high { color: #F23674; background: rgba(242, 54, 116, .08); border: 1px solid rgba(242, 54, 116, .15); }
+
+.noPrice {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--color-muted);
+}
+
+/* ── Legend ── */
+.legend {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 20px;
+  flex-wrap: wrap;
+}
+
+.legendLabel {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--color-muted);
+  letter-spacing: 0.04em;
+}
+
+.legendItem {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  padding: 3px 10px;
+  border-radius: 999px;
+}
+
+/* ── Info section ── */
+.infoSection {
+  margin-top: 48px;
+}
+
+/* ── Responsive ── */
+
+/* Widescreen */
+@media (min-width: 1440px) {
+  .hero { max-width: 1280px; }
+  .wrapper { max-width: 1280px; }
+  .grid { gap: 4px; }
+}
+
+/* TV / ultrawide */
+@media (min-width: 2560px) {
+  .hero { max-width: 1600px; padding-left: 64px; padding-right: 64px; }
+  .wrapper { max-width: 1600px; padding-left: 64px; padding-right: 64px; }
+  .grid { grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 8px; }
+  .card { padding: 20px; }
+}
+
+/* Tablet */
+@media (max-width: 768px) {
+  .grid { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); }
+  .controls { flex-direction: column; align-items: stretch; }
+  .card:hover { transform: none; }
+}
+
+/* Small phone */
+@media (max-width: 480px) {
+  .grid { grid-template-columns: 1fr 1fr; gap: 1px; }
+  .card { padding: 12px; }
+  .chainIcon { width: 24px; height: 24px; }
+  .chainName { font-size: 13px; }
+  .chainId { font-size: 10px; }
+  .legend { gap: 8px; }
+}
+
+/* Tiny phone */
+@media (max-width: 360px) {
+  .grid { grid-template-columns: 1fr; }
+}

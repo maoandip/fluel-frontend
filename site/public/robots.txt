@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /webapp/
+Disallow: /health
+
+Sitemap: https://fluel.io/sitemap.xml

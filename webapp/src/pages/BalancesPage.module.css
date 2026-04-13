@@ -1,0 +1,129 @@
+
+.walletRow {
+  margin-bottom: 0;
+}
+
+.card {
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+  border-radius: 4px;
+  padding: 16px 20px;
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--c-border-subtle);
+}
+
+.item:last-child {
+  border-bottom: none;
+}
+
+.chain {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.chainInfo {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  text-align: left;
+}
+
+.chainName {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--c-text);
+}
+
+.chainSub {
+  font-size: 12px;
+  color: var(--c-dim);
+}
+
+.amounts {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+}
+
+.usdValue {
+  font-family: var(--font-mono);
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--c-accent);
+}
+
+.tokenAmount {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--c-dim);
+}
+
+.total {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 0 4px;
+  border-top: 1px solid var(--c-border);
+  margin-top: 4px;
+}
+
+.totalLabel {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--c-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.totalValue {
+  font-family: var(--font-mono);
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--c-accent);
+}
+
+.withdrawBtn {
+  width: 100%;
+  padding: 14px;
+  background: rgba(0, 255, 178, .04);
+  border: 1px solid var(--c-border);
+  border-radius: 4px;
+  color: var(--c-muted);
+  font-family: var(--font-mono);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background .15s, border-color .15s, color .15s;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.withdrawBtn:hover {
+  background: rgba(0, 255, 178, .08);
+  border-color: var(--c-accent);
+  color: var(--c-accent);
+}
+
+.withdrawBtn:active {
+  background: rgba(0, 255, 178, .12);
+}
+
+.withdrawBtn:disabled {
+  opacity: .45;
+  cursor: not-allowed;
+}
+
+.withdrawHint {
+  text-align: center;
+  font-size: 11px;
+  color: var(--c-dim);
+  margin-top: 4px;
+}

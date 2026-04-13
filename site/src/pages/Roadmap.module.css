@@ -1,0 +1,144 @@
+/* Page-specific styles only — shared layout from page.module.css */
+
+/* Timeline */
+.timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.phase {
+  background: var(--color-panel);
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  padding: 28px 24px;
+  transition: border-color .2s;
+}
+
+.phase:hover {
+  border-color: rgba(0, 255, 178, .1);
+}
+
+.phase.current {
+  border-color: rgba(0, 255, 178, .2);
+}
+
+.phaseHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.phaseLabel {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+}
+
+.statusBadge {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 4px 12px;
+  border-radius: 999px;
+}
+
+.badge_done {
+  color: var(--color-accent);
+  background: rgba(0, 255, 178, .06);
+  border: 1px solid rgba(0, 255, 178, .12);
+}
+
+.badge_current {
+  color: var(--color-secondary);
+  background: rgba(255, 122, 92, .06);
+  border: 1px solid rgba(255, 122, 92, .12);
+}
+
+.badge_next {
+  color: var(--color-trust);
+  background: rgba(96, 165, 250, .06);
+  border: 1px solid rgba(96, 165, 250, .12);
+}
+
+.badge_planned {
+  color: var(--color-dim);
+  background: rgba(150, 170, 192, .06);
+  border: 1px solid rgba(150, 170, 192, .12);
+}
+
+.phaseTitle {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--color-text);
+  margin-bottom: 16px;
+}
+
+.phaseItems {
+  list-style: none;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.phaseItem {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 14px;
+  color: var(--color-dim);
+  line-height: 1.5;
+}
+
+.done .phaseItem { color: var(--color-text); }
+
+.check {
+  font-family: var(--font-mono);
+  font-size: 14px;
+  flex-shrink: 0;
+  width: 16px;
+  text-align: center;
+}
+
+.done .check { color: var(--color-accent); }
+.current .check { color: var(--color-secondary); }
+
+/* Note */
+.note {
+  margin-top: 40px;
+  padding: 20px 24px;
+  background: var(--color-panel);
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  font-size: 13px;
+  color: var(--color-muted);
+  line-height: 1.6;
+}
+
+.note p { margin-bottom: 4px; }
+.note p:last-child { margin-bottom: 0; }
+.note a { color: var(--color-accent); }
+
+/* Responsive */
+@media (max-width: 768px) {
+  .phase { padding: 20px 16px; }
+  .phaseHeader { flex-direction: column; align-items: flex-start; gap: 8px; }
+}
+
+/* Small phone */
+@media (max-width: 480px) {
+  .phase { padding: 16px 14px; }
+  .phaseTitle { font-size: 17px; }
+}
+
+/* Tiny phone */
+@media (max-width: 360px) {
+  .phaseItem { font-size: 13px; }
+}
