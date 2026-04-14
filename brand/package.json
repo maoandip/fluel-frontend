@@ -1,0 +1,11 @@
+{
+  "name": "fluel-brand",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "render": "node render-x-header.mjs ../site/public"
+  },
+  "dependencies": {
+    "puppeteer": "^23.0.0"
+  }
+}

@@ -1,8 +1,8 @@
 import { onMount, createSignal, For, Show } from "solid-js";
 import { apiUrl } from "../lib/api";
 import s from "./Landing.module.css";
+import { BOT_URL } from "../config/links";
 
-const BOT_URL = "https://t.me/FluelBot";
 const TOP_CHAINS = 10;
 
 interface ChainPrice {

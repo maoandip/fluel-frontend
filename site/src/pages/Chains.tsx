@@ -2,8 +2,7 @@ import { onMount, createSignal, createMemo, For, Show } from "solid-js";
 import { apiUrl } from "../lib/api";
 import p from "../styles/page.module.css";
 import s from "./Chains.module.css";
-
-const BOT_URL = "https://t.me/FluelBot";
+import { BOT_URL } from "../config/links";
 
 interface ChainInfo {
   id: number;

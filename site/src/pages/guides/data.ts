@@ -4,12 +4,15 @@ export interface Guide {
   description: string;
   keywords: string;
   category: "getting-started" | "chain" | "troubleshooting" | "tips";
+  publishedAt: string;     // ISO date (YYYY-MM-DD) — required for Article schema
+  dateModified?: string;   // ISO date (YYYY-MM-DD) — optional, falls back to publishedAt
   sections: Array<{ heading: string; body: string }>;
 }
 
 export const guides: Guide[] = [
   {
     slug: "how-to-get-gas-on-any-chain",
+    publishedAt: "2026-04-14",
     title: "How to Get Gas on Any Chain with USDC",
     description: "Stop struggling with bridges. Get native gas tokens on Ethereum, Arbitrum, Base, Polygon, and 60+ chains using USDC via Telegram.",
     keywords: "get gas tokens, buy gas with USDC, cross-chain gas, crypto gas tokens",
@@ -39,6 +42,7 @@ export const guides: Guide[] = [
   },
   {
     slug: "stuck-on-chain-with-no-gas",
+    publishedAt: "2026-04-14",
     title: "Stuck on a Chain With No Gas? Here's How to Fix It",
     description: "Bridged tokens to a new chain but can't do anything because you have no gas? fluel fixes this in seconds — no bridges needed.",
     keywords: "stuck on chain no gas, no ETH for gas, can't pay gas fees, stranded crypto, need gas tokens",
@@ -68,6 +72,7 @@ export const guides: Guide[] = [
   },
   {
     slug: "cheapest-way-to-get-eth-for-gas",
+    publishedAt: "2026-04-14",
     title: "Cheapest Way to Get ETH for Gas Fees",
     description: "Compare the cost of getting ETH for gas: CEX withdrawal vs bridge vs Fluel. Find the cheapest option for small gas amounts.",
     keywords: "cheap ETH gas, cheapest gas fees, buy small amount ETH, gas fee solution, low cost gas tokens",
@@ -97,6 +102,7 @@ export const guides: Guide[] = [
   },
   {
     slug: "how-to-get-gas-on-base",
+    publishedAt: "2026-04-14",
     title: "How to Get Gas on Base Chain",
     description: "Get ETH for gas on Base chain instantly using USDC. No bridge needed. Works from any chain via Telegram.",
     keywords: "Base chain gas, get ETH on Base, Base gas fees, Base chain bridge, Coinbase Base gas",
@@ -122,6 +128,7 @@ export const guides: Guide[] = [
   },
   {
     slug: "how-to-get-gas-on-arbitrum",
+    publishedAt: "2026-04-14",
     title: "How to Get Gas on Arbitrum",
     description: "Get ETH for gas on Arbitrum instantly. No mainnet bridge fees. Swap USDC to ETH on Arbitrum via Telegram.",
     keywords: "Arbitrum gas, get ETH on Arbitrum, Arbitrum bridge, Arbitrum gas fees",
@@ -147,6 +154,7 @@ export const guides: Guide[] = [
   },
   {
     slug: "bridge-gas-tokens-without-bridging",
+    publishedAt: "2026-04-14",
     title: "Get Gas Tokens Without Using a Bridge",
     description: "Skip the bridge UI entirely. Get native gas tokens on any EVM chain by swapping USDC via Telegram. No bridging required.",
     keywords: "skip bridge, no bridge gas tokens, bridge alternative, cross-chain without bridge, avoid bridge fees",

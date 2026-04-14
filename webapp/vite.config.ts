@@ -18,6 +18,7 @@ export default defineConfig({
     },
   },
   server: {
+    allowedHosts: [".ngrok-free.app"],
     proxy: {
       "/api": "http://localhost:3000",
       "/prices": "http://localhost:3000",

@@ -1,10 +1,75 @@
+import { onMount, onCleanup } from "solid-js";
 import p from "../styles/page.module.css";
 import s from "./HowItWorks.module.css";
+import { BOT_URL, GITHUB_URL } from "../config/links";
 
-const BOT_URL = "https://t.me/FluelBot";
+const FAQ_SCHEMA = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "Is my USDC safe?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Your USDC is held in a wallet secured by Privy's hardware enclaves (TEE). Fluel does not have access to your private keys and cannot unilaterally move or spend your funds. Every transaction requires your authenticated instruction via Telegram. You can withdraw your full balance at any time using /withdraw."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Why do I need to deposit USDC first?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "The embedded wallet allows Fluel to relay your swap instructions to third-party protocols without requiring you to sign each transaction manually via a browser extension. This enables the simple Telegram command experience — just type a command and gas arrives in your wallet. Your deposit address is verifiable on any block explorer."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Which chains are supported?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Fluel supports 40+ EVM chains including Ethereum, Arbitrum, Base, Optimism, Polygon, Avalanche, BSC, zkSync, Mantle, and many more. You can swap USDC from any chain that supports it, and receive gas on any chain LI.FI can route to."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How fast are swaps?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Most swaps complete in under 30 seconds. Layer 2 to Layer 2 swaps are the fastest (a few seconds). Swaps involving Ethereum mainnet may take 1-2 minutes due to block confirmation times."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Can I get my USDC back?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes, always. Use /withdraw to send all USDC back to your destination wallet. There is no lock-up period, no withdrawal fee, and no minimum balance requirement."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Do I need ETH to pay for gas fees?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "No. Transaction gas fees for submitting swaps and withdrawals are covered through Privy's gas sponsorship. You only need USDC."
+      }
+    }
+  ]
+};
 
 export default function HowItWorks() {
   document.title = "How it works — fluel";
+
+  onMount(() => {
+    const script = document.createElement("script");
+    script.type = "application/ld+json";
+    script.id = "faq-schema";
+    script.textContent = JSON.stringify(FAQ_SCHEMA);
+    document.head.appendChild(script);
+    onCleanup(() => script.remove());
+  });
+
   return (
     <div class={p.page}>
       <div class={s.hero}>
@@ -152,7 +217,7 @@ export default function HowItWorks() {
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
             </div>
             <div class={s.trustTitle}>Open source</div>
-            <p class={s.trustDesc}>All code is public on <a href="https://github.com/maoandip/gas-station" target="_blank" rel="noopener">GitHub</a>. Verify exactly what runs.</p>
+            <p class={s.trustDesc}>All code is public on <a href={GITHUB_URL} target="_blank" rel="noopener">GitHub</a>. Verify exactly what runs.</p>
           </div>
           <div class={s.trustCard}>
             <div class={s.trustIcon}>

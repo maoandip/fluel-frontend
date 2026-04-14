@@ -1,26 +1,30 @@
 # Dependencies
 node_modules/
-**/node_modules/
 
 # Build output
 dist/
-**/dist/
 build/
-**/build/
 .cache/
+.vite/
 
-# Environment variables
+# TypeScript / tooling caches
+*.tsbuildinfo
+.eslintcache
+
+# Environment variables and local overrides
 .env
-.env.local
-.env.*.local
+*.local
 
 # OS files
 .DS_Store
 Thumbs.db
+ehthumbs.db
+Desktop.ini
 
 # IDE
 .idea/
 .vscode/
+.history/
 *.swp
 *.swo
 
@@ -32,4 +36,6 @@ yarn-error.log*
 
 # Coverage
 coverage/
+
+# Claude Code workspace state
 .claude/
