@@ -85,7 +85,14 @@ async function main() {
   const base = server.resolvedUrls?.local[0]?.replace(/\/$/, "") ?? "http://localhost:4173";
 
   console.log("→ launching puppeteer");
-  const browser = await puppeteer.launch({ headless: "new" });
+  // --no-sandbox is needed on GitHub Actions / Cloudflare Pages Ubuntu
+  // runners because AppArmor blocks unprivileged user namespaces. Safe
+  // here: the CI environment is already isolated and we only load our
+  // own content.
+  const browser = await puppeteer.launch({
+    headless: "new",
+    args: ["--no-sandbox", "--disable-setuid-sandbox"],
+  });
   const page = await browser.newPage();
 
   // Intercept /prices and return a static sample so the chains grid
