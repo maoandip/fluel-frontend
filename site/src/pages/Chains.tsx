@@ -1,8 +1,9 @@
-import { createSignal, createMemo, For, Show } from "solid-js";
+import { createSignal, createMemo, For, Show, type Accessor } from "solid-js";
 import { createAsync } from "@solidjs/router";
 import p from "../styles/page.module.css";
 import s from "./Chains.module.css";
 import CtaButton from "../components/CtaButton";
+import AsyncSection from "../components/AsyncSection";
 import { getPrices } from "../lib/queries";
 
 interface ChainInfo {
@@ -42,18 +43,10 @@ function gweiLevel(g: number): "low" | "mid" | "high" {
 const cardLevelClass = { low: "cardLow", mid: "cardMid", high: "cardHigh" } as const;
 const gweiLevelClass = { low: "gweiLow", mid: "gweiMid", high: "gweiHigh" } as const;
 
-export default function Chains() {
-  document.title = "Supported Chains — fluel";
-  const meta = document.querySelector('meta[name="description"]');
-  if (meta) {
-    meta.setAttribute(
-      "content",
-      "Browse all EVM chains supported by Fluel. Live gas prices, native tokens, and real-time network status for 40+ blockchains.",
-    );
-  }
-
-  // createAsync feeds through the outer <Suspense>/<ErrorBoundary> at the
-  // route level, so no manual loading/error state is needed in this file.
+// Data-dependent grid. Lives inside AsyncSection so a failed /prices fetch
+// only breaks this block — the surrounding hero, controls, legend, info,
+// and CTA keep rendering.
+function ChainGrid(props: { search: Accessor<string>; sortBy: Accessor<"name" | "gas"> }) {
   const prices = createAsync(() => getPrices());
 
   const chains = createMemo<ChainInfo[]>(() => {
@@ -69,14 +62,11 @@ export default function Chains() {
       .sort((a, b) => a.name.localeCompare(b.name));
   });
 
-  const [search, setSearch] = createSignal("");
-  const [sortBy, setSortBy] = createSignal<"name" | "gas">("name");
-
   const filtered = createMemo(() => {
-    const q = search().toLowerCase().trim();
+    const q = props.search().toLowerCase().trim();
     let list = chains();
     if (q) list = list.filter((c) => c.name.toLowerCase().includes(q));
-    if (sortBy() === "gas") {
+    if (props.sortBy() === "gas") {
       list = [...list].sort((a, b) => (a.gwei ?? Infinity) - (b.gwei ?? Infinity));
     } else {
       list = [...list].sort((a, b) => a.name.localeCompare(b.name));
@@ -85,17 +75,81 @@ export default function Chains() {
   });
 
   return (
+    <>
+      <p class={s.count}>
+        {filtered().length === chains().length
+          ? `${chains().length} chains supported`
+          : `${filtered().length} of ${chains().length} chains`}
+      </p>
+
+      <Show when={filtered().length > 0} fallback={
+        <p class={s.loading}>No chains match "{props.search()}"</p>
+      }>
+        <div class={s.grid}>
+          <For each={filtered()}>
+            {(chain) => {
+              const hasGas = chain.gwei != null;
+              const level = hasGas ? gweiLevel(chain.gwei!) : null;
+              return (
+                <div class={`${s.card} ${level ? s[cardLevelClass[level]] : ""}`}>
+                  <div class={s.cardTop}>
+                    <Show when={chain.icon}>
+                      <img class={s.chainIcon} src={chain.icon!} alt="" loading="lazy" />
+                    </Show>
+                    <div class={s.chainInfo}>
+                      <span class={s.chainName}>{chain.name}</span>
+                      <span class={s.chainId}>Chain ID: {chain.id}</span>
+                    </div>
+                  </div>
+                  <Show when={hasGas && level}>
+                    <div class={s.cardBottom}>
+                      <div class={`${s.gweiVal} ${s[gweiLevelClass[level!]]}`}>
+                        {fmtGwei(chain.gwei!)}
+                        <span class={s.gweiUnit}> gwei</span>
+                      </div>
+                      <span class={`${s.levelBadge} ${s[level!]}`}>{level}</span>
+                    </div>
+                  </Show>
+                  <Show when={!hasGas}>
+                    <div class={s.cardBottom}>
+                      <span class={s.noPrice}>Price unavailable</span>
+                    </div>
+                  </Show>
+                </div>
+              );
+            }}
+          </For>
+        </div>
+      </Show>
+    </>
+  );
+}
+
+export default function Chains() {
+  document.title = "Supported Chains — fluel";
+  const meta = document.querySelector('meta[name="description"]');
+  if (meta) {
+    meta.setAttribute(
+      "content",
+      "Browse all EVM chains supported by Fluel. Live gas prices, native tokens, and real-time network status for 40+ blockchains.",
+    );
+  }
+
+  const [search, setSearch] = createSignal("");
+  const [sortBy, setSortBy] = createSignal<"name" | "gas">("name");
+
+  return (
     <div class={p.page}>
       <div class={s.hero}>
         <h1 class={p.title}>Supported Chains</h1>
         <p class={s.subtitle}>
-          Fluel supports {chains().length || "40+"} EVM chains. Swap USDC for native gas tokens on any of them — directly from Telegram.
+          Fluel supports 40+ EVM chains. Swap USDC for native gas tokens on any of them — directly from Telegram.
           This list updates automatically as new chains are added.
         </p>
       </div>
 
       <div class={s.wrapper}>
-        {/* Controls */}
+        {/* Controls — always render, even if prices fail */}
         <div class={s.controls}>
           <div class={s.searchWrap}>
             <input
@@ -123,57 +177,16 @@ export default function Chains() {
           </div>
         </div>
 
-        {/* Chain count */}
-        <p class={s.count}>
-          {filtered().length === chains().length
-            ? `${chains().length} chains supported`
-            : `${filtered().length} of ${chains().length} chains`}
-        </p>
+        {/* Data-dependent grid — scoped failure */}
+        <AsyncSection
+          queryKey="prices"
+          errorMessage="Couldn't load live gas prices. The chain list will be back shortly."
+          fallback={<p class={s.loading}>Loading chains...</p>}
+        >
+          <ChainGrid search={search} sortBy={sortBy} />
+        </AsyncSection>
 
-        {/* Grid */}
-        <Show when={chains().length > 0} fallback={<p class={s.loading}>Chain data unavailable</p>}>
-          <Show when={filtered().length > 0} fallback={
-            <p class={s.loading}>No chains match "{search()}"</p>
-          }>
-            <div class={s.grid}>
-              <For each={filtered()}>
-                {(chain) => {
-                  const hasGas = chain.gwei != null;
-                  const level = hasGas ? gweiLevel(chain.gwei!) : null;
-                  return (
-                    <div class={`${s.card} ${level ? s[cardLevelClass[level]] : ""}`}>
-                      <div class={s.cardTop}>
-                        <Show when={chain.icon}>
-                          <img class={s.chainIcon} src={chain.icon!} alt="" loading="lazy" />
-                        </Show>
-                        <div class={s.chainInfo}>
-                          <span class={s.chainName}>{chain.name}</span>
-                          <span class={s.chainId}>Chain ID: {chain.id}</span>
-                        </div>
-                      </div>
-                      <Show when={hasGas && level}>
-                        <div class={s.cardBottom}>
-                          <div class={`${s.gweiVal} ${s[gweiLevelClass[level!]]}`}>
-                            {fmtGwei(chain.gwei!)}
-                            <span class={s.gweiUnit}> gwei</span>
-                          </div>
-                          <span class={`${s.levelBadge} ${s[level!]}`}>{level}</span>
-                        </div>
-                      </Show>
-                      <Show when={!hasGas}>
-                        <div class={s.cardBottom}>
-                          <span class={s.noPrice}>Price unavailable</span>
-                        </div>
-                      </Show>
-                    </div>
-                  );
-                }}
-              </For>
-            </div>
-          </Show>
-        </Show>
-
-        {/* Legend */}
+        {/* Legend — always render */}
         <div class={s.legend}>
           <span class={s.legendLabel}>Gas levels:</span>
           <span class={`${s.legendItem} ${s.low}`}>Low (&lt;10 gwei)</span>
@@ -181,7 +194,7 @@ export default function Chains() {
           <span class={`${s.legendItem} ${s.high}`}>High (&gt;50 gwei)</span>
         </div>
 
-        {/* Info */}
+        {/* Info — always render */}
         <div class={s.infoSection}>
           <h2 class={p.sectionTitle}>How chain support works</h2>
           <p class={p.sectionDesc}>
@@ -197,7 +210,7 @@ export default function Chains() {
           </p>
         </div>
 
-        {/* CTA */}
+        {/* CTA — always render */}
         <div class={p.ctaBox}>
           <h2 class={p.ctaTitle}>Need gas on any of these chains?</h2>
           <p class={p.ctaDesc}>Swap USDC for native gas tokens in under a minute. No bridging, no wallet extensions — just Telegram.</p>

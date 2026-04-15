@@ -2,6 +2,7 @@ import { onMount, createSignal, createMemo, For, Show } from "solid-js";
 import { createAsync } from "@solidjs/router";
 import s from "./Landing.module.css";
 import CtaButton from "../components/CtaButton";
+import AsyncSection from "../components/AsyncSection";
 import { BETA_MODE } from "../config/flags";
 import { getPrices } from "../lib/queries";
 
@@ -42,9 +43,9 @@ function gweiLevel(g: number): "low" | "mid" | "high" {
 const cardLevelClass = { low: "cardLow", mid: "cardMid", high: "cardHigh" } as const;
 const gweiLevelClass = { low: "gweiLow", mid: "gweiMid", high: "gweiHigh" } as const;
 
-export default function Landing() {
-  document.title = "fluel — Never get stranded on a chain again";
-
+// Data-dependent prices grid + "Show all" toggle. Isolated so a /prices
+// failure doesn't break the hero, steps, features, or footer CTA.
+function LivePrices() {
   const prices = createAsync(() => getPrices());
 
   const allPrices = createMemo<ChainPrice[]>(() => {
@@ -62,11 +63,50 @@ export default function Landing() {
   });
 
   const [showAll, setShowAll] = createSignal(false);
-
   const displayPrices = () => {
     const list = allPrices();
     return showAll() ? list : list.slice(0, TOP_CHAINS);
   };
+
+  return (
+    <>
+      <Show when={allPrices().length > TOP_CHAINS}>
+        <div class={s.sectionHeaderRight}>
+          <button class={s.toggleBtn} onClick={() => setShowAll(!showAll())}>
+            {showAll() ? "Show less" : `Show all ${allPrices().length} chains`}
+          </button>
+        </div>
+      </Show>
+      <Show when={allPrices().length > 0} fallback={<p class={s.loading}>Prices unavailable</p>}>
+        <div class={s.pricesGrid}>
+          <For each={displayPrices()}>
+            {(chain) => {
+              const level = gweiLevel(chain.gwei!);
+              return (
+                <div class={`${s.priceCard} ${s[cardLevelClass[level]]}`}>
+                  <div class={s.chainLabel}>
+                    <Show when={chain.icon}>
+                      <img class={s.chainIcon} src={chain.icon!} alt="" loading="lazy" />
+                    </Show>
+                    {chain.name}
+                  </div>
+                  <div class={`${s.gweiVal} ${s[gweiLevelClass[level]]}`}>
+                    {fmtGwei(chain.gwei!)}
+                    <span class={s.gweiUnit}> gwei</span>
+                  </div>
+                  <span class={`${s.levelBadge} ${s[level]}`}>{level}</span>
+                </div>
+              );
+            }}
+          </For>
+        </div>
+      </Show>
+    </>
+  );
+}
+
+export default function Landing() {
+  document.title = "fluel — Never get stranded on a chain again";
 
   // Scroll reveal
   function setupReveal() {
@@ -128,41 +168,19 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* Prices */}
+      {/* Prices — scoped async boundary */}
       <section class={`${s.section} ${s.reveal}`}>
         <div class={s.wrapper}>
           <div class={s.sectionHeader}>
             <h2 class={s.sectionLabel}>Live gas prices</h2>
-            <Show when={allPrices().length > TOP_CHAINS}>
-              <button class={s.toggleBtn} onClick={() => setShowAll(!showAll())}>
-                {showAll() ? "Show less" : `Show all ${allPrices().length} chains`}
-              </button>
-            </Show>
           </div>
-          <Show when={allPrices().length > 0} fallback={<p class={s.loading}>Prices unavailable</p>}>
-              <div class={s.pricesGrid}>
-                <For each={displayPrices()}>
-                  {(chain) => {
-                    const level = gweiLevel(chain.gwei!);
-                    return (
-                      <div class={`${s.priceCard} ${s[cardLevelClass[level]]}`}>
-                        <div class={s.chainLabel}>
-                          <Show when={chain.icon}>
-                            <img class={s.chainIcon} src={chain.icon!} alt="" loading="lazy" />
-                          </Show>
-                          {chain.name}
-                        </div>
-                        <div class={`${s.gweiVal} ${s[gweiLevelClass[level]]}`}>
-                          {fmtGwei(chain.gwei!)}
-                          <span class={s.gweiUnit}> gwei</span>
-                        </div>
-                        <span class={`${s.levelBadge} ${s[level]}`}>{level}</span>
-                      </div>
-                    );
-                  }}
-                </For>
-              </div>
-            </Show>
+          <AsyncSection
+            queryKey="prices"
+            errorMessage="Couldn't load live gas prices. The rest of the page is still usable."
+            fallback={<p class={s.loading}>Loading prices...</p>}
+          >
+            <LivePrices />
+          </AsyncSection>
         </div>
       </section>
 
