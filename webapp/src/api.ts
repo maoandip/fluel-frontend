@@ -14,7 +14,8 @@ import type {
 
 // ── Fetch wrapper ──────────────────────────────────────────────────
 
-const API_BASE = import.meta.env.VITE_API_BASE ?? "";
+import { env } from "./config/env";
+const API_BASE = env.VITE_API_BASE;
 
 async function api<T>(path: string, options: RequestInit = {}): Promise<T> {
   const headers: Record<string, string> = {

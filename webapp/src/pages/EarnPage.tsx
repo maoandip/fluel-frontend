@@ -10,19 +10,12 @@ import type { ReferralStats, Gift } from "../types";
 import EmptyState from "../components/EmptyState";
 import Skeleton from "../components/Skeleton";
 import ChainPicker from "../components/ChainPicker";
+import { giftStatusClass } from "../lib/status";
 import s from "./EarnPage.module.css";
 
 type Section = "referrals" | "gifts";
 const GIFT_AMOUNTS = [1, 3, 5, 10, 25];
 
-function statusColor(status: string): string {
-  switch (status) {
-    case "claimed": return "#3CE3AB";
-    case "pending": return "#FFB900";
-    case "expired": return "#F23674";
-    default: return "#90A1B9";
-  }
-}
 
 function timeAgo(ts: number): string {
   const s = Math.floor(Date.now() / 1000) - ts;
@@ -146,7 +139,7 @@ const EarnPage: Component = () => {
         <div class={s.card}>
           <div class={s.label}>Send Gas Gift</div>
           <div class={s.hint}>Send gas tokens to a friend via a claim link</div>
-          <div style={{ "margin-bottom": "12px" }}>
+          <div class={s.giftChainPicker}>
             <ChainPicker chains={chainList()} value={giftChain()} onChange={setGiftChain} label="Chain" />
           </div>
           <div class={s.amountSelector}>
@@ -194,7 +187,7 @@ const EarnPage: Component = () => {
                       <span class="list-item-primary">${gift.amountUsd} on {gift.chainName}</span>
                       <span class="list-item-secondary">{timeAgo(gift.createdAt)}</span>
                     </div>
-                    <span class="status-badge" style={{ color: statusColor(gift.status), background: `${statusColor(gift.status)}18` }}>
+                    <span class={`status-badge ${s[giftStatusClass(gift.status)]}`}>
                       {gift.status}
                     </span>
                   </div>

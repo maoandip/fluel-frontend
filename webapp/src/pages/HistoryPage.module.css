@@ -100,3 +100,9 @@
   font-size: 11px;
   color: var(--c-muted);
 }
+
+/* tx status pill variants */
+.statusDone    { color: #3CE3AB; background: rgba(60, 227, 171, .10); }
+.statusPending { color: #FFB900; background: rgba(255, 185, 0, .10); }
+.statusFailed  { color: #F23674; background: rgba(242, 54, 116, .10); }
+.statusUnknown { color: #90A1B9; background: rgba(144, 161, 185, .10); }

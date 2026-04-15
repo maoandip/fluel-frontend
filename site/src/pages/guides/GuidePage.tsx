@@ -3,7 +3,7 @@ import { useParams, A } from "@solidjs/router";
 import { guides, type Guide } from "./data";
 import p from "../../styles/page.module.css";
 import s from "./Guides.module.css";
-import { BOT_URL } from "../../config/links";
+import CtaButton from "../../components/CtaButton";
 
 const SITE = "https://fluel.io";
 const OG_IMAGE = `${SITE}/og.png`;
@@ -109,7 +109,7 @@ export default function GuidePage() {
               <div class={s.cta}>
                 <h3 class={s.ctaTitle}>Never get stranded again.</h3>
                 <p class={s.ctaDesc}>Open the fluel bot and get gas on any chain in seconds.</p>
-                <a href={BOT_URL} class={s.ctaBtn} target="_blank" rel="noopener">Get gas now</a>
+                <CtaButton class={s.ctaBtn} />
               </div>
             </article>
           </div>

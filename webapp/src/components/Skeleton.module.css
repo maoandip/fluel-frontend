@@ -13,6 +13,12 @@
   animation: shimmer 1.5s ease-in-out infinite;
 }
 
+.w0 { width: 100%; }
+.w1 { width: 85%; }
+.w2 { width: 60%; }
+.w3 { width: 92%; }
+.w4 { width: 70%; }
+
 @keyframes shimmer {
   0% { background-position: 200% 0; }
   100% { background-position: -200% 0; }

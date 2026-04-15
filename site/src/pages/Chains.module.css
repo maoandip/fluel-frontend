@@ -215,6 +215,16 @@
 .mid { color: #FFB900; background: rgba(255, 185, 0, .08); border: 1px solid rgba(255, 185, 0, .15); }
 .high { color: #F23674; background: rgba(242, 54, 116, .08); border: 1px solid rgba(242, 54, 116, .15); }
 
+/* Card tinted by gas level */
+.cardLow  { background: rgba(60, 227, 171, .08); border-color: rgba(60, 227, 171, .13); }
+.cardMid  { background: rgba(255, 185, 0, .08);  border-color: rgba(255, 185, 0, .13); }
+.cardHigh { background: rgba(242, 54, 116, .08); border-color: rgba(242, 54, 116, .13); }
+
+/* Gwei value text colored by level */
+.gweiLow  { color: #3CE3AB; }
+.gweiMid  { color: #FFB900; }
+.gweiHigh { color: #F23674; }
+
 .noPrice {
   font-family: var(--font-mono);
   font-size: 12px;

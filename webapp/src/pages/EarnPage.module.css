@@ -231,3 +231,12 @@
   color: var(--c-muted);
   line-height: 1.5;
 }
+
+/* Layout helper */
+.giftChainPicker { margin-bottom: 12px; }
+
+/* Status badge variants */
+.statusClaimed { color: #3CE3AB; background: rgba(60, 227, 171, .09); }
+.statusPending { color: #FFB900; background: rgba(255, 185, 0, .09); }
+.statusExpired { color: #F23674; background: rgba(242, 54, 116, .09); }
+.statusDefault { color: #90A1B9; background: rgba(144, 161, 185, .09); }

@@ -3,6 +3,7 @@ import { getLifiHistory, type LifiTransfer } from "../api";
 import { useApp } from "../stores/app";
 import EmptyState from "../components/EmptyState";
 import Skeleton from "../components/Skeleton";
+import { txStatusClass } from "../lib/status";
 import s from "./HistoryPage.module.css";
 
 const PAGE_SIZE = 20;
@@ -85,14 +86,6 @@ const HistoryPage: Component = () => {
     return new Date(ts * 1000).toLocaleDateString("en-US", { month: "short", day: "numeric" });
   }
 
-  function statusColor(status: string): string {
-    switch (status) {
-      case "DONE": return "#3CE3AB";
-      case "PENDING": return "#FFB900";
-      case "FAILED": case "NOT_FOUND": return "#F23674";
-      default: return "#90A1B9";
-    }
-  }
 
   function statusLabel(status: string): string {
     switch (status) {
@@ -141,10 +134,7 @@ const HistoryPage: Component = () => {
                     <span class={s.txArrow}>&rarr;</span>
                     {tx.receiving.token.symbol}
                   </span>
-                  <span
-                    class={s.txStatus}
-                    style={{ color: statusColor(tx.status), background: statusColor(tx.status) + "1A" }}
-                  >
+                  <span class={`${s.txStatus} ${s[txStatusClass(tx.status)]}`}>
                     {statusLabel(tx.status)}
                   </span>
                 </div>

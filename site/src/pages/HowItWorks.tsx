@@ -1,7 +1,8 @@
 import { onMount, onCleanup } from "solid-js";
 import p from "../styles/page.module.css";
 import s from "./HowItWorks.module.css";
-import { BOT_URL, GITHUB_URL } from "../config/links";
+import { GITHUB_URL } from "../config/links";
+import CtaButton from "../components/CtaButton";
 
 const FAQ_SCHEMA = {
   "@context": "https://schema.org",
@@ -285,7 +286,7 @@ export default function HowItWorks() {
         <div class={s.cta}>
           <h2 class={s.ctaTitle}>Ready to get gas?</h2>
           <p class={s.ctaDesc}>Open the Telegram bot to start swapping USDC for gas on any chain.</p>
-          <a href={BOT_URL} class={s.ctaBtn} target="_blank" rel="noopener">Open Bot</a>
+          <CtaButton class={s.ctaBtn} botLabel="Open Bot" />
         </div>
       </div>
     </div>

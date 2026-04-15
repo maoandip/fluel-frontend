@@ -1,7 +1,8 @@
 import { onMount, createSignal, For, Show } from "solid-js";
 import { apiUrl } from "../lib/api";
 import s from "./Landing.module.css";
-import { BOT_URL } from "../config/links";
+import CtaButton from "../components/CtaButton";
+import { BETA_MODE } from "../config/flags";
 
 const TOP_CHAINS = 10;
 
@@ -37,13 +38,8 @@ function gweiLevel(g: number): "low" | "mid" | "high" {
   return "high";
 }
 
-function levelColor(level: "low" | "mid" | "high"): string {
-  return level === "low" ? "#3CE3AB" : level === "mid" ? "#FFB900" : "#F23674";
-}
-
-function levelBg(level: "low" | "mid" | "high"): string {
-  return level === "low" ? "rgba(60,227,171,.08)" : level === "mid" ? "rgba(255,185,0,.08)" : "rgba(242,54,116,.08)";
-}
+const cardLevelClass = { low: "cardLow", mid: "cardMid", high: "cardHigh" } as const;
+const gweiLevelClass = { low: "gweiLow", mid: "gweiMid", high: "gweiHigh" } as const;
 
 export default function Landing() {
   const [allPrices, setAllPrices] = createSignal<ChainPrice[]>([]);
@@ -92,11 +88,11 @@ export default function Landing() {
       {/* Hero */}
       <section class={s.hero}>
         <div class={s.wrapper}>
-          <p class={s.label}>Cross-chain gas</p>
+          <p class={s.label}>{BETA_MODE ? "Closed beta · launching soon" : "Cross-chain gas"}</p>
           <h1 class={s.heroTitle}>Never get stranded<br />on a chain again.</h1>
           <p class={s.heroSub}>Stablecoins in. Gas out. Usually in under a minute. No manual bridging — just Telegram.</p>
           <div class={s.heroCtas}>
-            <a href={BOT_URL} class={s.btnPrimary} target="_blank" rel="noopener">Get gas now</a>
+            <CtaButton class={s.btnPrimary} />
             <a href="/how-it-works" class={s.btnGhost}>How it works &rarr;</a>
           </div>
           <p class={s.heroProof}><a href="/chains">40+ EVM chains supported</a> &middot; Powered by <a href="https://li.fi" target="_blank" rel="noopener">Li.Fi</a></p>
@@ -148,14 +144,14 @@ export default function Landing() {
                   {(chain) => {
                     const level = gweiLevel(chain.gwei!);
                     return (
-                      <div class={s.priceCard} style={{ background: levelBg(level), "border-color": `${levelColor(level)}22` }}>
+                      <div class={`${s.priceCard} ${s[cardLevelClass[level]]}`}>
                         <div class={s.chainLabel}>
                           <Show when={chain.icon}>
                             <img class={s.chainIcon} src={chain.icon!} alt="" loading="lazy" />
                           </Show>
                           {chain.name}
                         </div>
-                        <div class={s.gweiVal} style={{ color: levelColor(level) }}>
+                        <div class={`${s.gweiVal} ${s[gweiLevelClass[level]]}`}>
                           {fmtGwei(chain.gwei!)}
                           <span class={s.gweiUnit}> gwei</span>
                         </div>
@@ -234,7 +230,7 @@ export default function Landing() {
           <div class={s.ctaBox}>
             <h2 class={s.ctaTitle}>Stop losing gas to failed swaps.</h2>
             <p class={s.ctaSub}>Swap USDC for gas on any chain in under a minute. One bot. No friction.</p>
-            <a href={BOT_URL} class={s.btnPrimary} target="_blank" rel="noopener">Get gas now</a>
+            <CtaButton class={s.btnPrimary} />
             <p class={s.ctaDisclosure}>Fluel is a non-custodial technical interface. We do not hold, control, or insure your crypto-assets. Crypto-assets are high risk. You may lose all your money. This service is not regulated by the Financial Conduct Authority (FCA). <a href="/terms">Terms</a></p>
           </div>
         </div>

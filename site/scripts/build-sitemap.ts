@@ -1,17 +1,26 @@
 // Generates site/public/sitemap.xml at build time.
-// Static routes are listed below; guide routes are auto-discovered from data.ts.
-// lastmod for each URL is derived from `git log -1` against the page's source file.
+// Static routes are listed below; guide routes are auto-discovered by importing
+// guides/data.ts directly (via tsx). lastmod for each URL is derived from
+// `git log -1` against the page's source file.
 
-import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
+import { writeFileSync, mkdirSync } from "node:fs";
 import { execSync } from "node:child_process";
 import { resolve, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
+import { guides } from "../src/pages/guides/data.ts";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const SITE_ROOT = resolve(__dirname, "..");
 const ORIGIN = "https://fluel.io";
 
-const STATIC_ROUTES = [
+interface Route {
+  path: string;
+  source: string | string[];
+  changefreq: string;
+  priority: string;
+}
+
+const STATIC_ROUTES: Route[] = [
   { path: "/",             source: "src/pages/Landing.tsx",          changefreq: "weekly",  priority: "1.0" },
   { path: "/chains",       source: "src/pages/Chains.tsx",           changefreq: "daily",   priority: "0.9" },
   { path: "/how-it-works", source: "src/pages/HowItWorks.tsx",       changefreq: "monthly", priority: "0.8" },
@@ -22,10 +31,10 @@ const STATIC_ROUTES = [
   { path: "/privacy",      source: "src/pages/Privacy.tsx",          changefreq: "yearly",  priority: "0.3" },
 ];
 
-const GUIDES_DATA = "src/pages/guides/data.ts";
 const GUIDE_PAGE = "src/pages/guides/GuidePage.tsx";
+const GUIDES_DATA = "src/pages/guides/data.ts";
 
-function gitLastMod(relPath) {
+function gitLastMod(relPath: string): string | null {
   try {
     const iso = execSync(`git log -1 --format=%cI -- "${relPath}"`, {
       cwd: SITE_ROOT,
@@ -38,35 +47,25 @@ function gitLastMod(relPath) {
   }
 }
 
-function extractGuideSlugs() {
-  const content = readFileSync(resolve(SITE_ROOT, GUIDES_DATA), "utf8");
-  const slugs = [...content.matchAll(/slug:\s*"([^"]+)"/g)].map((m) => m[1]);
-  if (slugs.length === 0) {
-    throw new Error(`No guide slugs found in ${GUIDES_DATA}`);
-  }
-  return slugs;
-}
-
-function dateOnly(iso) {
+function dateOnly(iso: string | null): string {
   return iso ? iso.split("T")[0] : new Date().toISOString().split("T")[0];
 }
 
-const guideSlugs = extractGuideSlugs();
-const guideRoutes = guideSlugs.map((slug) => ({
-  path: `/guides/${slug}`,
+function lastModFor(source: string | string[]): string | null {
+  const sources = Array.isArray(source) ? source : [source];
+  const dates = sources.map(gitLastMod).filter((d): d is string => Boolean(d)).sort();
+  return dates[dates.length - 1] ?? null;
+}
+
+const guideRoutes: Route[] = guides.map((g) => ({
+  path: `/guides/${g.slug}`,
   // Guide content lives in data.ts; layout in GuidePage.tsx — use whichever changed last.
   source: [GUIDES_DATA, GUIDE_PAGE],
   changefreq: "monthly",
   priority: "0.7",
 }));
 
-const allRoutes = [...STATIC_ROUTES, ...guideRoutes];
-
-function lastModFor(source) {
-  const sources = Array.isArray(source) ? source : [source];
-  const dates = sources.map(gitLastMod).filter(Boolean).sort();
-  return dates[dates.length - 1] ?? null;
-}
+const allRoutes: Route[] = [...STATIC_ROUTES, ...guideRoutes];
 
 const entries = allRoutes
   .map((r) => {
@@ -84,4 +83,4 @@ ${entries}
 const outPath = resolve(SITE_ROOT, "public/sitemap.xml");
 mkdirSync(dirname(outPath), { recursive: true });
 writeFileSync(outPath, xml);
-console.log(`✓ wrote sitemap.xml — ${allRoutes.length} routes (${guideSlugs.length} guides)`);
+console.log(`✓ wrote sitemap.xml — ${allRoutes.length} routes (${guides.length} guides)`);

@@ -2,7 +2,7 @@ import { onMount, createSignal, createMemo, For, Show } from "solid-js";
 import { apiUrl } from "../lib/api";
 import p from "../styles/page.module.css";
 import s from "./Chains.module.css";
-import { BOT_URL } from "../config/links";
+import CtaButton from "../components/CtaButton";
 
 interface ChainInfo {
   id: number;
@@ -35,13 +35,8 @@ function gweiLevel(g: number): "low" | "mid" | "high" {
   return "high";
 }
 
-function levelColor(level: "low" | "mid" | "high"): string {
-  return level === "low" ? "#3CE3AB" : level === "mid" ? "#FFB900" : "#F23674";
-}
-
-function levelBg(level: "low" | "mid" | "high"): string {
-  return level === "low" ? "rgba(60,227,171,.08)" : level === "mid" ? "rgba(255,185,0,.08)" : "rgba(242,54,116,.08)";
-}
+const cardLevelClass = { low: "cardLow", mid: "cardMid", high: "cardHigh" } as const;
+const gweiLevelClass = { low: "gweiLow", mid: "gweiMid", high: "gweiHigh" } as const;
 
 export default function Chains() {
   const [chains, setChains] = createSignal<ChainInfo[]>([]);
@@ -140,10 +135,7 @@ export default function Chains() {
                     const hasGas = chain.gwei != null;
                     const level = hasGas ? gweiLevel(chain.gwei!) : null;
                     return (
-                      <div
-                        class={s.card}
-                        style={level ? { background: levelBg(level), "border-color": `${levelColor(level)}22` } : {}}
-                      >
+                      <div class={`${s.card} ${level ? s[cardLevelClass[level]] : ""}`}>
                         <div class={s.cardTop}>
                           <Show when={chain.icon}>
                             <img class={s.chainIcon} src={chain.icon!} alt="" loading="lazy" />
@@ -155,7 +147,7 @@ export default function Chains() {
                         </div>
                         <Show when={hasGas && level}>
                           <div class={s.cardBottom}>
-                            <div class={s.gweiVal} style={{ color: levelColor(level!) }}>
+                            <div class={`${s.gweiVal} ${s[gweiLevelClass[level!]]}`}>
                               {fmtGwei(chain.gwei!)}
                               <span class={s.gweiUnit}> gwei</span>
                             </div>
@@ -204,7 +196,7 @@ export default function Chains() {
         <div class={p.ctaBox}>
           <h2 class={p.ctaTitle}>Need gas on any of these chains?</h2>
           <p class={p.ctaDesc}>Swap USDC for native gas tokens in under a minute. No bridging, no wallet extensions — just Telegram.</p>
-          <a href={BOT_URL} class={p.ctaBtn} target="_blank" rel="noopener">Get gas now</a>
+          <CtaButton class={p.ctaBtn} />
         </div>
       </div>
     </div>

@@ -87,12 +87,8 @@ const AutomatePage: Component = () => {
     catch (err: any) { showToast(err.message || "Failed"); haptic("error"); }
   }
 
-  function levelColor(level: "low" | "mid" | "high"): string {
-    return level === "low" ? "#3CE3AB" : level === "mid" ? "#FFB900" : "#F23674";
-  }
-  function levelBg(level: "low" | "mid" | "high"): string {
-    return level === "low" ? "rgba(60,227,171,.1)" : level === "mid" ? "rgba(255,185,0,.1)" : "rgba(242,54,116,.1)";
-  }
+  const tileLevelClass = { low: "gasTileLow", mid: "gasTileMid", high: "gasTileHigh" } as const;
+  const tileValueClass = { low: "gasTileValueLow", mid: "gasTileValueMid", high: "gasTileValueHigh" } as const;
 
   return (
     <div class="page">
@@ -142,14 +138,14 @@ const AutomatePage: Component = () => {
                       const priceGwei = data.prices[chain.id] ?? 0;
                       const level = gweiLevel(priceGwei);
                       return (
-                        <div class={s.gasTile} style={{ background: levelBg(level), "border-color": `${levelColor(level)}22` }}>
+                        <div class={`${s.gasTile} ${s[tileLevelClass[level]]}`}>
                           <div class={s.gasTileHeader}>
                             <Show when={chain.icon}>
                               <img class={s.gasTileIcon} src={chain.icon!} alt="" loading="lazy" />
                             </Show>
                             <span class={s.gasTileChain}>{chain.name}</span>
                           </div>
-                          <span class={s.gasTileValue} style={{ color: levelColor(level) }}>{fmtGwei(priceGwei)}</span>
+                          <span class={`${s.gasTileValue} ${s[tileValueClass[level]]}`}>{fmtGwei(priceGwei)}</span>
                           <span class={s.gasTileUnit}>gwei</span>
                         </div>
                       );
@@ -166,10 +162,10 @@ const AutomatePage: Component = () => {
           <div class={s.label}>Set Gas Alert</div>
           <div class={s.hint}>Get notified when gas drops below your threshold</div>
           <div class={s.formRow}>
-            <div style={{ flex: "1" }}>
+            <div class={s.flexItem}>
               <ChainPicker chains={chains()} value={alertChain()} onChange={setAlertChain} label="Chain" />
             </div>
-            <div class={s.inputGroup} style={{ flex: "1" }}>
+            <div class={`${s.inputGroup} ${s.flexItem}`}>
               <label class={s.inputLabel}>Threshold (gwei)</label>
               <input class={s.input} type="text" inputMode="decimal" placeholder="e.g. 20"
                 value={alertThreshold()} onInput={(e) => setAlertThreshold(e.currentTarget.value)} />
@@ -211,11 +207,11 @@ const AutomatePage: Component = () => {
         <div class={s.card}>
           <div class={s.label}>Create Auto-Refill</div>
           <div class={s.hint}>Automatically swap USDC for gas when your balance drops</div>
-          <div class={s.formRow} style={{ "margin-bottom": "10px" }}>
-            <div style={{ flex: "1" }}>
+          <div class={`${s.formRow} ${s.formRowSpaced}`}>
+            <div class={s.flexItem}>
               <ChainPicker chains={chains()} value={refillGasChain()} onChange={setRefillGasChain} label="Gas Chain" />
             </div>
-            <div style={{ flex: "1" }}>
+            <div class={s.flexItem}>
               <ChainPicker chains={chains()} value={refillSourceChain()} onChange={setRefillSourceChain} label="Source Chain" />
             </div>
           </div>

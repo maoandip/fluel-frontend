@@ -5,18 +5,31 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "prebuild": "node scripts/build-sitemap.mjs",
+    "prebuild": "node scripts/sync-tokens.mjs && tsx scripts/build-sitemap.ts",
     "build": "vite build",
     "preview": "vite preview",
-    "sitemap": "node scripts/build-sitemap.mjs"
+    "sitemap": "tsx scripts/build-sitemap.ts",
+    "lint": "eslint src",
+    "format": "prettier --write \"src/**/*.{ts,tsx,css}\"",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "dependencies": {
+    "@solidjs/router": "^0.15.3",
     "solid-js": "^1.9.5",
-    "@solidjs/router": "^0.15.3"
+    "valibot": "^1.3.1"
   },
   "devDependencies": {
+    "@eslint/js": "^9.39.4",
+    "eslint": "^9.39.4",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-solid": "^0.14.5",
+    "prettier": "^3.8.3",
+    "tsx": "^4.21.0",
     "typescript": "^5.7.3",
+    "typescript-eslint": "^8.58.2",
     "vite": "^6.2.0",
-    "vite-plugin-solid": "^2.11.0"
+    "vite-plugin-solid": "^2.11.0",
+    "vitest": "^4.1.4"
   }
 }

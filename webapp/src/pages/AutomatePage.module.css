@@ -178,3 +178,16 @@
   cursor: not-allowed;
   transform: none;
 }
+
+/* ── Layout helpers (replacing inline styles) ── */
+.flexItem { flex: 1; }
+.formRowSpaced { margin-bottom: 10px; }
+
+/* ── Gas tile tinted by level ── */
+.gasTileLow  { background: rgba(60, 227, 171, .10); border-color: rgba(60, 227, 171, .13); }
+.gasTileMid  { background: rgba(255, 185, 0, .10);  border-color: rgba(255, 185, 0, .13); }
+.gasTileHigh { background: rgba(242, 54, 116, .10); border-color: rgba(242, 54, 116, .13); }
+
+.gasTileValueLow  { color: #3CE3AB; }
+.gasTileValueMid  { color: #FFB900; }
+.gasTileValueHigh { color: #F23674; }

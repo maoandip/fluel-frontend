@@ -11,6 +11,9 @@ build/
 *.tsbuildinfo
 .eslintcache
 
+# Generated brand tokens (synced from brand/tokens.css at build time)
+**/src/styles/_tokens.css
+
 # Environment variables and local overrides
 .env
 *.local

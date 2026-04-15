@@ -7,6 +7,11 @@
   width: 100%;
 }
 
+.honeypot {
+  position: absolute;
+  left: -9999px;
+}
+
 .typeRow {
   display: flex;
   gap: 8px;

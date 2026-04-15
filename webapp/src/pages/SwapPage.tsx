@@ -288,7 +288,6 @@ const SwapPage: Component = () => {
     };
   });
 
-  const isSwapping = () => progress() === "confirming" || progress() === "pending";
   const isValidAddress = (addr: string) => /^0x[0-9a-fA-F]{40}$/.test(addr);
 
   async function saveDestination() {
@@ -360,7 +359,7 @@ const SwapPage: Component = () => {
               </div>
               <Show when={fromBalance()}>
                 <div class={s.usdValue}>
-                  Balance: <b style={{ color: "var(--c-accent)", cursor: "pointer" }} onClick={setMax}>{fromBalance()} USDC</b>
+                  Balance: <b class={s.balanceMax} onClick={setMax}>{fromBalance()} USDC</b>
                 </div>
               </Show>
             </div>

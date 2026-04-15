@@ -1,3 +1,4 @@
+import { For } from "solid-js";
 import p from "../styles/page.module.css";
 import s from "./Roadmap.module.css";
 
@@ -89,23 +90,27 @@ export default function Roadmap() {
         <p class={p.subtitle}>Where we've been. Where we're going. Built in public.</p>
 
         <div class={s.timeline}>
-          {phases.map((phase) => (
-            <div class={`${s.phase} ${s[phase.status]}`}>
-              <div class={s.phaseHeader}>
-                <span class={s.phaseLabel}>{phase.label}</span>
-                <span class={`${s.statusBadge} ${s[`badge_${phase.status}`]}`}>{statusLabel[phase.status]}</span>
+          <For each={phases}>
+            {(phase) => (
+              <div class={`${s.phase} ${s[phase.status]}`}>
+                <div class={s.phaseHeader}>
+                  <span class={s.phaseLabel}>{phase.label}</span>
+                  <span class={`${s.statusBadge} ${s[`badge_${phase.status}`]}`}>{statusLabel[phase.status]}</span>
+                </div>
+                <h2 class={s.phaseTitle}>{phase.title}</h2>
+                <ul class={s.phaseItems}>
+                  <For each={phase.items}>
+                    {(item) => (
+                      <li class={s.phaseItem}>
+                        <span class={s.check}>{phase.status === "done" ? "✓" : "·"}</span>
+                        {item}
+                      </li>
+                    )}
+                  </For>
+                </ul>
               </div>
-              <h2 class={s.phaseTitle}>{phase.title}</h2>
-              <ul class={s.phaseItems}>
-                {phase.items.map((item) => (
-                  <li class={s.phaseItem}>
-                    <span class={s.check}>{phase.status === "done" ? "✓" : "·"}</span>
-                    {item}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
+            )}
+          </For>
         </div>
 
         <div class={s.note}>

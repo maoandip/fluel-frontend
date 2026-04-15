@@ -1,4 +1,4 @@
-import { createSignal, type JSX } from "solid-js";
+import { createSignal, For, type JSX } from "solid-js";
 import { haptic } from "../telegram";
 import s from "./TabLayout.module.css";
 
@@ -85,15 +85,17 @@ export default function TabLayout(props: TabLayoutProps) {
       </div>
 
       <nav class={s.nav}>
-        {tabs.map((tab) => (
-          <button
-            class={currentTab() === tab.id ? s.tabBtnActive : s.tabBtn}
-            onClick={() => switchTab(tab.id)}
-          >
-            {tab.icon()}
-            <span class={currentTab() === tab.id ? s.tabLabelActive : s.tabLabel}>{tab.label}</span>
-          </button>
-        ))}
+        <For each={tabs}>
+          {(tab) => (
+            <button
+              class={currentTab() === tab.id ? s.tabBtnActive : s.tabBtn}
+              onClick={() => switchTab(tab.id)}
+            >
+              {tab.icon()}
+              <span class={currentTab() === tab.id ? s.tabLabelActive : s.tabLabel}>{tab.label}</span>
+            </button>
+          )}
+        </For>
       </nav>
     </div>
   );

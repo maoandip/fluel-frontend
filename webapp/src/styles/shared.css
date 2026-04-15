@@ -1,24 +1,28 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap');
+@import './_tokens.css';
 
-/* ── Design tokens ─────────────────────────────────────────────────── */
+/* ── Design tokens ──────────────────────────────────────────────────
+   Project-local variable names mapped to the canonical brand palette
+   (defined in brand/tokens.css → src/styles/_tokens.css).
+   ────────────────────────────────────────────────────────────────── */
 :root {
-  --c-bg: #080B10;
-  --c-bg2: #101418;
-  --c-surface: #111820;
-  --c-surface2: #1A1F28;
-  --c-interactive: #111820;
-  --c-accent: #00FFB2;
-  --c-secondary: #FF7A5C;
-  --c-text: #E2EDF8;
-  --c-muted: #96AAC0;
-  --c-dim: #6E8CA8;
-  --c-success: #00FFB2;
-  --c-error: #FF4444;
-  --c-pending: #FF7A5C;
-  --c-border: #1C2530;
-  --c-border-subtle: #1A1F28;
-  --font: 'Inter', sans-serif;
-  --font-mono: 'JetBrains Mono', monospace;
+  --c-bg:            var(--fluel-void);
+  --c-bg2:           var(--fluel-void-2);
+  --c-surface:       var(--fluel-panel);
+  --c-surface2:      var(--fluel-panel-2);
+  --c-interactive:   var(--fluel-panel);
+  --c-accent:        var(--fluel-mint);
+  --c-secondary:     var(--fluel-coral);
+  --c-text:          var(--fluel-text);
+  --c-muted:         var(--fluel-text-muted);
+  --c-dim:           var(--fluel-text-dim);
+  --c-success:       var(--fluel-success);
+  --c-error:         var(--fluel-error);
+  --c-pending:       var(--fluel-pending);
+  --c-border:        var(--fluel-border);
+  --c-border-subtle: var(--fluel-border-subtle);
+  --font:            var(--fluel-font-sans);
+  --font-mono:       var(--fluel-font-mono);
 }
 
 /* ── Page layout ───────────────────────────────────────────────────── */

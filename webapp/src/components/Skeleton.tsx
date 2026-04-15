@@ -5,15 +5,16 @@ export interface SkeletonProps {
   rows?: number;
 }
 
+const WIDTH_CLASSES = [s.w0, s.w1, s.w2, s.w3, s.w4];
+
 export default function Skeleton(props: SkeletonProps) {
   const count = () => props.rows ?? 3;
-  const widths = ["100%", "85%", "60%", "92%", "70%"];
 
   return (
     <div class={s.container}>
       <For each={Array.from({ length: count() })}>
         {(_, i) => (
-          <div class={s.row} style={{ width: widths[i() % widths.length] }} />
+          <div class={`${s.row} ${WIDTH_CLASSES[i() % WIDTH_CLASSES.length]}`} />
         )}
       </For>
     </div>

@@ -1,0 +1,47 @@
+/* ──────────────────────────────────────────────────────────────────
+   fluel — design tokens (single source of truth)
+
+   This file is the canonical palette. Both site/ and webapp/ copy it
+   into their src/styles/_tokens.css at build time and re-export the
+   raw values under their own variable naming convention.
+
+   DO NOT add project-specific variables here. Only the brand palette
+   and gas/status semantics that are shared across both projects.
+   ────────────────────────────────────────────────────────────────── */
+
+:root {
+  /* Brand core */
+  --fluel-void:        #080B10;  /* primary background */
+  --fluel-void-2:      #101418;  /* slightly elevated bg */
+  --fluel-panel:       #111820;  /* surface */
+  --fluel-panel-2:     #1A1F28;  /* elevated surface */
+  --fluel-mint:        #00FFB2;  /* primary accent — Electric Mint */
+  --fluel-coral:       #FF7A5C;  /* secondary accent — Coral Fire */
+  --fluel-chain-blue:  #60A5FA;  /* tertiary — Chain Blue */
+
+  /* Text */
+  --fluel-text:        #E2EDF8;  /* primary text */
+  --fluel-text-muted:  #96AAC0;  /* secondary text */
+  --fluel-text-dim:    #6E8CA8;  /* tertiary text */
+  --fluel-text-faint:  #4A5568;  /* near-border text */
+
+  /* Borders */
+  --fluel-border:        #1C2530;
+  --fluel-border-subtle: #1A1F28;
+
+  /* Status semantics */
+  --fluel-success: #00FFB2;
+  --fluel-warn:    #FFB900;
+  --fluel-danger:  #F23674;
+  --fluel-error:   #FF4444;
+  --fluel-pending: #FF7A5C;
+
+  /* Gas-level semantics (used by Chains, Landing, AutomatePage) */
+  --fluel-gas-low:  #3CE3AB;
+  --fluel-gas-mid:  #FFB900;
+  --fluel-gas-high: #F23674;
+
+  /* Type */
+  --fluel-font-sans: 'Inter', sans-serif;
+  --fluel-font-mono: 'JetBrains Mono', monospace;
+}

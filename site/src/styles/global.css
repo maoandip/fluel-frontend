@@ -1,19 +1,22 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap');
+@import './_tokens.css';
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
+/* Project-local variable names mapped to the canonical brand palette
+   (defined in brand/tokens.css → src/styles/_tokens.css). */
 :root {
-  --color-bg:        #080B10;
-  --color-panel:     #111820;
-  --color-border:    #1C2530;
-  --color-accent:    #00FFB2;
-  --color-secondary: #FF7A5C;
-  --color-trust:     #60A5FA;
-  --color-text:      #E2EDF8;
-  --color-dim:       #96AAC0;
-  --color-muted:     #6E8CA8;
-  --font-sans:       'Inter', sans-serif;
-  --font-mono:       'JetBrains Mono', monospace;
+  --color-bg:        var(--fluel-void);
+  --color-panel:     var(--fluel-panel);
+  --color-border:    var(--fluel-border);
+  --color-accent:    var(--fluel-mint);
+  --color-secondary: var(--fluel-coral);
+  --color-trust:     var(--fluel-chain-blue);
+  --color-text:      var(--fluel-text);
+  --color-dim:       var(--fluel-text-muted);
+  --color-muted:     var(--fluel-text-dim);
+  --font-sans:       var(--fluel-font-sans);
+  --font-mono:       var(--fluel-font-mono);
 }
 
 html { scroll-behavior: smooth; }

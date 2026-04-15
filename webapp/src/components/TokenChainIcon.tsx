@@ -1,4 +1,5 @@
 import { Show } from "solid-js";
+import s from "./TokenChainIcon.module.css";
 
 export interface TokenChainIconProps {
   /** Main token image URL (optional — shows fallback letter if missing) */
@@ -13,74 +14,30 @@ export interface TokenChainIconProps {
   badgeSize?: number;
 }
 
+const GAP = 2;
+
 export default function TokenChainIcon(props: TokenChainIconProps) {
   const size = () => props.size ?? 28;
   const badge = () => props.badgeSize ?? 12;
-  const gap = 2;
-  const maskRadius = () => badge() / 2 + gap;
+  const maskRadius = () => badge() / 2 + GAP;
+
+  // Per-instance CSS variables — visual styling lives in TokenChainIcon.module.css.
+  const cssVars = () => ({
+    "--tci-size": `${size()}px`,
+    "--tci-badge": `${badge()}px`,
+    "--tci-mask-r": `${maskRadius()}px`,
+    "--tci-fallback-font": `${Math.round(size() * 0.4)}px`,
+  } as Record<string, string>);
 
   return (
-    <div
-      class="tci"
-      style={{
-        position: "relative",
-        width: `${size()}px`,
-        height: `${size()}px`,
-        "flex-shrink": "0",
-      }}
-    >
-      {/* Main token icon with mask cutout */}
+    <div class={s.root} style={cssVars()}>
       <Show when={props.tokenIcon} fallback={
-        <div
-          style={{
-            width: `${size()}px`,
-            height: `${size()}px`,
-            "border-radius": "50%",
-            background: "rgba(0,255,178,0.1)",
-            display: "flex",
-            "align-items": "center",
-            "justify-content": "center",
-            "font-family": "var(--font)",
-            "font-size": `${Math.round(size() * 0.4)}px`,
-            "font-weight": "700",
-            color: "var(--c-accent)",
-            mask: `radial-gradient(circle ${maskRadius()}px at calc(100% - 14%) calc(100% - 14%), transparent 96%, white) 100% 100% / 100% 100% no-repeat`,
-            "-webkit-mask": `radial-gradient(circle ${maskRadius()}px at calc(100% - 14%) calc(100% - 14%), transparent 96%, white) 100% 100% / 100% 100% no-repeat`,
-          }}
-        >
-          {(props.tokenSymbol ?? "?")[0]}
-        </div>
+        <div class={s.fallback}>{(props.tokenSymbol ?? "?")[0]}</div>
       }>
-        <img
-          src={props.tokenIcon}
-          alt=""
-          style={{
-            width: `${size()}px`,
-            height: `${size()}px`,
-            "border-radius": "50%",
-            "object-fit": "contain",
-            mask: `radial-gradient(circle ${maskRadius()}px at calc(100% - 14%) calc(100% - 14%), transparent 96%, white) 100% 100% / 100% 100% no-repeat`,
-            "-webkit-mask": `radial-gradient(circle ${maskRadius()}px at calc(100% - 14%) calc(100% - 14%), transparent 96%, white) 100% 100% / 100% 100% no-repeat`,
-          }}
-        />
+        <img class={s.token} src={props.tokenIcon} alt="" />
       </Show>
-
-      {/* Chain badge */}
       <Show when={props.chainIcon}>
-        <img
-          src={props.chainIcon}
-          alt=""
-          style={{
-            position: "absolute",
-            bottom: "0",
-            right: "0",
-            width: `${badge()}px`,
-            height: `${badge()}px`,
-            "border-radius": "50%",
-            "object-fit": "contain",
-            background: "var(--c-bg)",
-          }}
-        />
+        <img class={s.badge} src={props.chainIcon} alt="" />
       </Show>
     </div>
   );

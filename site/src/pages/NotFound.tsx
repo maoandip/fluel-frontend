@@ -1,4 +1,4 @@
-import { onMount } from "solid-js";
+import { onMount, Index } from "solid-js";
 import { A } from "@solidjs/router";
 import s from "./NotFound.module.css";
 
@@ -90,12 +90,16 @@ export default function NotFound() {
         <div class={s.road}>
           <div class={s.roadLine} />
           <div class={s.roadDashes}>
-            {Array.from({ length: 12 }).map(() => <div class={s.roadDash} />)}
+            <Index each={Array.from({ length: 12 })}>
+              {() => <div class={s.roadDash} />}
+            </Index>
           </div>
           <div class={s.chainNodes}>
-            {Array.from({ length: 8 }).map(() => (
-              <><div class={s.chainNode} /><div class={s.chainLink} /></>
-            ))}
+            <Index each={Array.from({ length: 8 })}>
+              {() => (
+                <><div class={s.chainNode} /><div class={s.chainLink} /></>
+              )}
+            </Index>
           </div>
         </div>
 

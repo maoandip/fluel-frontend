@@ -2,12 +2,17 @@ import { type JSX, createSignal, Show } from "solid-js";
 import { A } from "@solidjs/router";
 import s from "./Layout.module.css";
 import { BOT_URL, X_URL, TG_CHANNEL_URL, GITHUB_URL } from "../config/links";
+import { BETA_MODE } from "../config/flags";
+
+const CTA_LABEL = BETA_MODE ? "Join waitlist" : "Get gas now";
+const CTA_HREF = BETA_MODE ? "/feedback" : BOT_URL;
+const CTA_EXTERNAL = !BETA_MODE;
 
 function Logo(props: { size?: number }) {
-  const h = props.size ?? 28;
-  const w = Math.round(h * 48 / 72);
+  const h = () => props.size ?? 28;
+  const w = () => Math.round((h() * 48) / 72);
   return (
-    <svg width={w} height={h} viewBox="0 0 48 72" fill="none">
+    <svg width={w()} height={h()} viewBox="0 0 48 72" fill="none">
       <path d="M24 68 C14 68 6 60 6 50 C6 40 14 32 24 18 C34 32 42 40 42 50 C42 60 34 68 24 68Z" fill="#00FFB2"/>
       <path d="M24 18 C24 18 19 8 19 4 C19 1.5 21.2 0 24 0 C26.8 0 29 1.5 29 4 C29 8 24 18 24 18Z" fill="#FF7A5C"/>
     </svg>
@@ -20,6 +25,13 @@ export default function Layout(props: { children?: JSX.Element }) {
 
   return (
     <div class={s.root}>
+      <Show when={BETA_MODE}>
+        <div class={s.betaBanner}>
+          <span class={s.betaDot} />
+          Closed beta — public launch coming soon.
+          <A href="/feedback">Join the waitlist →</A>
+        </div>
+      </Show>
       <nav class={s.nav}>
         <div class={s.navInner}>
           <A href="/" class={s.navBrand} onClick={closeMenu}>
@@ -28,7 +40,11 @@ export default function Layout(props: { children?: JSX.Element }) {
           <div class={s.navRight}>
             <A href="/how-it-works" class={s.navLink}>How it works</A>
             <A href="/chains" class={s.navLink}>Chains</A>
-            <a href={BOT_URL} class={s.navCta} target="_blank" rel="noopener">Get gas now</a>
+            <Show when={CTA_EXTERNAL} fallback={
+              <A href={CTA_HREF} class={s.navCta}>{CTA_LABEL}</A>
+            }>
+              <a href={CTA_HREF} class={s.navCta} target="_blank" rel="noopener">{CTA_LABEL}</a>
+            </Show>
             <button class={`${s.burger} ${menuOpen() ? s.burgerOpen : ""}`} onClick={() => setMenuOpen(!menuOpen())} aria-label="Menu">
               <span /><span /><span />
             </button>
@@ -41,8 +57,12 @@ export default function Layout(props: { children?: JSX.Element }) {
             <A href="/chains" class={s.mobileLink} onClick={closeMenu}>Chains</A>
             <A href="/roadmap" class={s.mobileLink} onClick={closeMenu}>Roadmap</A>
             <A href="/guides" class={s.mobileLink} onClick={closeMenu}>Guides</A>
-            <A href="/feedback" class={s.mobileLink} onClick={closeMenu}>Feedback</A>
-            <a href={BOT_URL} class={s.mobileCta} target="_blank" rel="noopener" onClick={closeMenu}>Get gas now</a>
+            <A href="/feedback" class={s.mobileLink} onClick={closeMenu}>{BETA_MODE ? "Waitlist" : "Feedback"}</A>
+            <Show when={CTA_EXTERNAL} fallback={
+              <A href={CTA_HREF} class={s.mobileCta} onClick={closeMenu}>{CTA_LABEL}</A>
+            }>
+              <a href={CTA_HREF} class={s.mobileCta} target="_blank" rel="noopener" onClick={closeMenu}>{CTA_LABEL}</a>
+            </Show>
           </div>
         </Show>
       </nav>

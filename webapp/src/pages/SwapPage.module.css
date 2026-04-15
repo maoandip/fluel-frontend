@@ -92,6 +92,11 @@
   margin-top: 8px;
 }
 
+.balanceMax {
+  color: var(--c-accent);
+  cursor: pointer;
+}
+
 .receiveValue {
   font-family: var(--font-mono);
   font-size: 24px;
