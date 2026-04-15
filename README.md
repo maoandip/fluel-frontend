@@ -1,130 +1,171 @@
 # fluel — Frontend
 
-The public marketing site and Telegram Mini App for [fluel](https://fluel.io) — cross-chain gas top-up via Telegram.
+Public frontend for [fluel](https://fluel.io) — cross-chain gas top-ups via Telegram.
 
-This repo contains the user-facing code. The backend (Telegram bot, API, database, swap execution) is maintained privately — see [architecture](#architecture) below for the split.
+This repo contains the marketing site and the Telegram Mini App. The bot, API, swap execution, and database live in a separate private repo.
 
-## What's in here
+## Projects
 
 ```
 fluel-frontend/
-├── site/      Public marketing site (SolidJS + Vite) — fluel.io
-├── webapp/    Telegram Mini App (SolidJS + Vite) — webapp.fluel.io
-└── package.json   Convenience scripts for local dev
+├── site/          Marketing site                → fluel.io
+├── webapp/        Telegram Mini App             → webapp.fluel.io
+├── brand/         Brand asset tooling
+└── package.json   Root orchestration scripts
 ```
 
-### site — Public marketing site
+### `site/` — Marketing site
 
-**Stack:** SolidJS · Vite · CSS Modules
+SolidJS + Vite + CSS Modules. Every route is prerendered at build time via Puppeteer, so search engines and social crawlers see the real content (per-page `<title>`, canonical, meta description, and JSON-LD schemas) without executing JavaScript.
 
-**Pages:**
-- Landing (with live gas prices from the public `/prices` endpoint)
-- How it works
-- Supported chains
-- Roadmap
-- Guides
-- Feedback form
-- Terms & Privacy Policy
-- Animated 404 page
+Pages: landing, how it works, supported chains, roadmap, guides, waitlist/feedback, terms, privacy, and an animated 404. Live gas prices come from the public `/prices` endpoint; everything else is static.
 
-### webapp — Telegram Mini App
+### `webapp/` — Telegram Mini App
 
-**Stack:** SolidJS · Vite · CSS Modules · Telegram WebApp SDK
+SolidJS + Vite + CSS Modules + Telegram WebApp SDK. Five tabs:
 
-**Tabs:**
 - **Swap** — USDC → native gas via Li.Fi
-- **Balances** — USDC across all chains, withdraw to destination wallet
+- **Balances** — USDC across chains, withdraw to destination wallet
 - **History** — transaction history with live status tracking
 - **Automate** — gas price alerts and auto-refill rules
 - **Earn** — referrals and gift gas
 
-All API calls go to the backend via cryptographically-validated Telegram `initData` authentication.
+All API calls authenticate via cryptographically-verified Telegram `initData` on the server.
+
+## Tech stack
+
+**Both projects**
+- [SolidJS](https://www.solidjs.com/) v1.9
+- [Vite](https://vitejs.dev/) v6
+- CSS Modules
+- TypeScript (strict)
+- [valibot](https://valibot.dev/) — env + API schema validation
+- ESLint flat config + Prettier
+- Vitest
+
+**Marketing site**
+- [@solidjs/router](https://github.com/solidjs/solid-router) with `createAsync` + `query()`
+- Puppeteer for build-time prerendering
+
+**Mini App**
+- [@solidjs/router](https://github.com/solidjs/solid-router)
+- [XState](https://xstate.js.org/) v5 — swap flow state machine
+- [@kobalte/core](https://kobalte.dev/) — accessible primitives
+- [Telegram WebApp SDK](https://core.telegram.org/bots/webapps)
 
 ## Architecture
 
 ```
-┌─────────────────────┐          ┌──────────────────────┐
-│  Cloudflare Pages   │          │  DigitalOcean        │
-│                     │          │                      │
-│  fluel.io (site)    │◄────────►│  api.fluel.io        │
-│  webapp.fluel.io    │   HTTPS  │  (private backend)   │
-│                     │          │                      │
-└─────────────────────┘          └──────────────────────┘
-      ▲                                    ▲
-      │                                    │
-      │ cached globally                    │ Telegram webhook
-      │                                    │
-   Users                              @FluelBot
+                       ┌────────────────────┐
+   Browsers  ────────► │ Cloudflare Pages   │
+                       │ fluel.io  (site)   │
+                       │ webapp.fluel.io    │
+                       └─────────┬──────────┘
+                                 │  HTTPS
+                                 ▼
+                       ┌────────────────────┐
+   Telegram  ────────► │  Private backend   │
+                       │  api.fluel.io      │
+                       └────────────────────┘
 ```
 
-**Public (this repo):**
-- Everything users see and run in their browser / Telegram client
-- Deployed to Cloudflare Pages for global CDN + free SSL
+Public (this repo): everything users see in their browser or Telegram client.
 
-**Private:**
-- Telegram bot command handlers
-- REST API (`src/api.ts`)
-- Swap execution and guards
-- Rate limits, fee calculation, referral logic
-- Database (SQLite)
-- Privy and Li.Fi SDK integrations
+Private: Telegram bot handlers, REST API, swap execution, fee logic, database, Privy and Li.Fi integrations.
 
-The private backend exposes a REST API at `api.fluel.io`. The Mini App authenticates requests using Telegram's `initData` hash, verified on the server with HMAC-SHA256 against the bot token.
-
-## Local development
+## Quickstart
 
 ```bash
-npm install   # installs for both site and webapp
+# Install deps for root + site + webapp + brand
+npm run install:all
 
-# Run the site (localhost:3001)
+# Marketing site (http://localhost:3001)
 npm run dev:site
 
-# Run the webapp (localhost:5173)
+# Mini App (http://localhost:5173)
 npm run dev:webapp
 ```
 
-Both frontends need the backend running somewhere for API calls. By default they proxy to `http://localhost:3000`. If you're only contributing to the frontend, you can ignore the backend — most pages render without API data.
+Both frontends proxy API calls to `http://localhost:3000` in dev. Without a backend, pages that depend on live data show a graceful fallback; the rest of each page renders fine.
 
-## Build
+## Scripts
 
-```bash
-npm run build:site      # outputs to site/dist
-npm run build:webapp    # outputs to webapp/dist
-npm run build           # builds both
+Root orchestration:
+
+| Command | Runs |
+|---|---|
+| `npm run install:all` | Install deps for root, site, webapp, and brand |
+| `npm run dev:site` / `dev:webapp` | Dev server for one project |
+| `npm run build` | Build both projects |
+| `npm run lint` | ESLint on both |
+| `npm run typecheck` | `tsc --noEmit` on both |
+| `npm test` | Vitest on both |
+| `npm run check` | lint → typecheck → test → build |
+
+Per-project (run from `site/` or `webapp/`):
+- `npm run dev` · `npm run build` · `npm run preview`
+- `npm run lint` · `npm run typecheck` · `npm test` · `npm run format`
+
+## Build pipeline
+
+When you run `npm run build` inside `site/`:
+
+1. **`prebuild`** — syncs `brand/tokens.css` into `src/styles/_tokens.css` and regenerates `public/sitemap.xml` from routes + guide metadata (`lastmod` derived from `git log`).
+2. **`build`** — `vite build`.
+3. **`postbuild`** — prerenders every route with Puppeteer (static pages + every guide) into `dist/<route>/index.html`. Canonical URLs, meta tags, and JSON-LD schemas are captured in the HTML.
+
+`webapp/` has a lighter pipeline: `sync-tokens` → `vite build`. No prerendering since it's gated by Telegram auth.
+
+## Folder structure — Mini App
+
 ```
-
-## Deployment
-
-Both frontends are deployed to [Cloudflare Pages](https://pages.cloudflare.com). Every push to `main` triggers an automatic rebuild and deploy.
-
-- **site** — build command: `cd site && npm ci && npm run build`, output: `site/dist`
-- **webapp** — build command: `cd webapp && npm ci && npm run build`, output: `webapp/dist`
-
-Custom domains:
-- `fluel.io` → site project
-- `webapp.fluel.io` → webapp project
+webapp/src/
+├── components/
+│   ├── ui/        Primitives (Toast, Skeleton, EmptyState, …)
+│   ├── chain/     Domain components (ChainPicker, TokenChainIcon, …)
+│   └── layout/    App shell (TabLayout, WalletBar, Splash, …)
+├── config/        env.ts · flags.ts
+├── lib/
+│   ├── hooks/     useLocalStorage, …
+│   ├── machines/  swap.ts (XState)
+│   ├── queries.ts Cached async queries
+│   ├── schemas.ts valibot API response schemas
+│   ├── format.ts · status.ts · telegram.ts
+├── pages/         SwapPage, BalancesPage, HistoryPage, AutomatePage, EarnPage
+├── stores/        app · balances · toast
+└── styles/        shared.css, _tokens.css (synced from brand/)
+```
 
 ## Brand
 
-fluel uses the **S2 Electric Mint** palette and the **Drop-to-Flame** mark. See [`site/src/styles/global.css`](./site/src/styles/global.css) for the canonical CSS variables.
+Canonical design tokens live in [`brand/tokens.css`](./brand/tokens.css) and are synced into each project at build time.
 
 | Token | Hex | Role |
-|-------|-----|------|
-| Electric Mint | `#00FFB2` | Primary CTAs, mark body |
-| Coral Fire | `#FF7A5C` | Mark tip, urgency, receive-side |
-| Chain Blue | `#60A5FA` | Verified / trust states |
+|---|---|---|
+| Electric Mint | `#00FFB2` | Primary accent, CTAs, mark body |
+| Coral Fire | `#FF7A5C` | Secondary accent, mark tip |
+| Chain Blue | `#60A5FA` | Trust / verified states |
 | Void | `#080B10` | Background |
 | Panel | `#111820` | Cards, surfaces |
+
+## Deployment
+
+Both projects deploy automatically to [Cloudflare Pages](https://pages.cloudflare.com) on every push to `main`.
+
+- `fluel.io` → marketing site
+- `webapp.fluel.io` → Mini App
 
 ## Contributing
 
 Pull requests welcome. For larger changes, please open an issue first.
 
-Before submitting:
+Before submitting a PR, run:
 
 ```bash
-npm run typecheck   # tsc --noEmit in both projects
+npm run check
 ```
+
+This runs lint, typecheck, tests, and build for both projects. CI runs the same checks on every PR.
 
 ## Security
 
@@ -132,7 +173,7 @@ If you find a security issue, please **do not open a public issue**. See [SECURI
 
 ## License
 
-[MIT](./LICENSE) — Copyright (c) 2026 MAD Protocol Ltd.
+[MIT](./LICENSE) — Copyright © 2026 MAD Protocol Ltd.
 
 fluel is a trading name of MAD Protocol Ltd, registered in England and Wales (No. 11232367).
 
