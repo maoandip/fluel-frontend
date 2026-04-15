@@ -33,6 +33,14 @@ function RouteShell(props: { children: JSX.Element }) {
 const root = document.getElementById("root");
 if (!root) throw new Error("Root element not found");
 
+// Clear prerendered content before mounting. render() inserts into the
+// element — it does not clear existing children — so without this, the
+// prerendered tree stays and render() produces a second tree beside it,
+// resulting in a duplicated page (visible as two ._root_ divs inside
+// #root). We can't use hydrate() because puppeteer-based prerendering
+// doesn't emit Solid's hydration markers.
+root.innerHTML = "";
+
 render(
   () => (
     <Router

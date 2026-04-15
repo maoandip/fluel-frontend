@@ -38,39 +38,6 @@ const STATIC_ROUTES = [
 const GUIDE_ROUTES = guides.map((g) => `/guides/${g.slug}`);
 const ALL_ROUTES = [...STATIC_ROUTES, ...GUIDE_ROUTES];
 
-// Stub for /prices so prerendered HTML shows a real sample of chains.
-// Real users still get live data on hydration.
-const PRICES_STUB = JSON.stringify({
-  prices: { 1: 15, 10: 0.001, 137: 30, 8453: 0.005, 42161: 0.1 },
-  chains: [
-    {
-      id: 1,
-      name: "Ethereum",
-      icon: "https://raw.githubusercontent.com/lifinance/types/main/src/assets/icons/chains/ethereum.svg",
-    },
-    {
-      id: 10,
-      name: "OP Mainnet",
-      icon: "https://raw.githubusercontent.com/lifinance/types/main/src/assets/icons/chains/optimism.svg",
-    },
-    {
-      id: 137,
-      name: "Polygon",
-      icon: "https://raw.githubusercontent.com/lifinance/types/main/src/assets/icons/chains/polygon.svg",
-    },
-    {
-      id: 8453,
-      name: "Base",
-      icon: "https://raw.githubusercontent.com/lifinance/types/main/src/assets/icons/chains/base.svg",
-    },
-    {
-      id: 42161,
-      name: "Arbitrum",
-      icon: "https://raw.githubusercontent.com/lifinance/types/main/src/assets/icons/chains/arbitrum.svg",
-    },
-  ],
-});
-
 function outputPathFor(route: string): string {
   if (route === "/") return resolve(DIST, "index.html");
   return resolve(DIST, route.replace(/^\//, ""), "index.html");
@@ -95,17 +62,17 @@ async function main() {
   });
   const page = await browser.newPage();
 
-  // Intercept /prices and return a static sample so the chains grid
-  // renders deterministic content.
+  // Intercept /prices and never respond — the fetch stays pending so the
+  // AsyncSection captures its loading-fallback state in the prerendered
+  // HTML. The client then does a fresh fetch on mount and shows real data.
+  // This avoids baking stub content into the HTML that would differ from
+  // what real users see and cause a "loads twice" flash.
   await page.setRequestInterception(true);
   page.on("request", (req) => {
     const url = new URL(req.url());
     if (url.pathname === "/prices") {
-      req.respond({
-        status: 200,
-        contentType: "application/json",
-        body: PRICES_STUB,
-      });
+      // Intentionally do nothing — request stays pending for the duration
+      // of this page's capture.
       return;
     }
     req.continue();
@@ -113,10 +80,13 @@ async function main() {
 
   for (const route of ALL_ROUTES) {
     const url = `${base}${route}`;
-    await page.goto(url, { waitUntil: "networkidle0", timeout: 20_000 });
-    // Give Solid's reactive graph a beat to flush any trailing effects
-    // (createAsync Suspense resolution, schema injection, etc.)
-    await new Promise((r) => setTimeout(r, 300));
+    // waitUntil: 'load' fires when HTML + scripts + stylesheets are loaded
+    // but does NOT wait for the pending /prices fetch (we want that to
+    // stay pending so the Suspense fallback is captured).
+    await page.goto(url, { waitUntil: "load", timeout: 20_000 });
+    // Give Solid's reactive graph a beat to mount and flush effects
+    // (component trees, schema injection, Suspense fallbacks).
+    await new Promise((r) => setTimeout(r, 500));
 
     const html = await page.content();
     const outPath = outputPathFor(route);
