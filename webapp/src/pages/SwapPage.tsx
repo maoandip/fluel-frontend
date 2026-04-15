@@ -5,7 +5,7 @@ import { useApp } from "../stores/app";
 import { balancesQuery, refetchBalances } from "../stores/balances";
 import { showToast } from "../stores/toast";
 import { postQuote, postConfirm, getSwapStatus } from "../api";
-import { BackButton, haptic } from "../lib/telegram";
+import { haptic } from "../lib/telegram";
 import { NATIVE_TOKEN } from "../types";
 import { useLocalStorage } from "../lib/hooks/useLocalStorage";
 import { swapMachine } from "../lib/machines/swap";
@@ -87,7 +87,6 @@ const SwapPage: Component = () => {
     clearInterval(quoteAgeTimer);
     clearInterval(statusPollTimer);
     abortController?.abort();
-    BackButton.hide();
   });
 
   const fromBalance = createMemo(() => {
@@ -225,7 +224,6 @@ const SwapPage: Component = () => {
     clearInterval(quoteAgeTimer);
     send({ type: "RESET" });
     refetchBalances();
-    BackButton.hide();
   }
 
   function retrySwap() {
@@ -233,11 +231,6 @@ const SwapPage: Component = () => {
     send({ type: "RESET" });
     scheduleQuote();
   }
-
-  createEffect(() => {
-    if (progress()) BackButton.show(resetSwap);
-    else BackButton.hide();
-  });
 
   // ── Chain selector ──
   const getPayChain = (name: string) => chains().find((c) => c.name === name);

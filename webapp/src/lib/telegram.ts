@@ -218,13 +218,23 @@ export const MainButton = {
 };
 
 // ── BackButton helpers ─────────────────────────────────────────────
+// Tracks the currently-registered click handler so repeat show() calls
+// don't stack handlers on top of each other.
+
+let currentBackHandler: (() => void) | null = null;
 
 export const BackButton = {
   show(onClick: () => void) {
+    if (currentBackHandler) tg.BackButton.offClick(currentBackHandler);
+    currentBackHandler = onClick;
     tg.BackButton.onClick(onClick);
     tg.BackButton.show();
   },
   hide() {
+    if (currentBackHandler) {
+      tg.BackButton.offClick(currentBackHandler);
+      currentBackHandler = null;
+    }
     tg.BackButton.hide();
   },
 };

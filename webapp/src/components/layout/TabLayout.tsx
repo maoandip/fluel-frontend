@@ -1,18 +1,7 @@
-import { createSignal, For, type JSX } from "solid-js";
+import { For, type JSX } from "solid-js";
+import { A } from "@solidjs/router";
 import { haptic } from "../../lib/telegram";
 import s from "./TabLayout.module.css";
-
-export type TabId = "swap" | "balance" | "history" | "automate" | "earn";
-
-interface TabDef {
-  id: TabId;
-  label: string;
-  icon: () => JSX.Element;
-}
-
-const [currentTab, setCurrentTab] = createSignal<TabId>("swap");
-
-export { currentTab };
 
 // ── SVG icons ──────────────────────────────────────────────────────
 
@@ -57,43 +46,45 @@ function EarnIcon() {
   );
 }
 
+interface TabDef {
+  path: string;
+  label: string;
+  icon: () => JSX.Element;
+  end?: boolean; // strict path match (used for the root "/" tab)
+}
+
 const tabs: TabDef[] = [
-  { id: "swap", label: "Swap", icon: SwapIcon },
-  { id: "balance", label: "Balance", icon: BalanceIcon },
-  { id: "history", label: "History", icon: HistoryIcon },
-  { id: "automate", label: "Automate", icon: AutomateIcon },
-  { id: "earn", label: "Earn", icon: EarnIcon },
+  { path: "/",         label: "Swap",     icon: SwapIcon,     end: true },
+  { path: "/balance",  label: "Balance",  icon: BalanceIcon },
+  { path: "/history",  label: "History",  icon: HistoryIcon },
+  { path: "/automate", label: "Automate", icon: AutomateIcon },
+  { path: "/earn",     label: "Earn",     icon: EarnIcon },
 ];
 
 // ── Component ──────────────────────────────────────────────────────
 
 export interface TabLayoutProps {
-  children: (tab: () => TabId) => JSX.Element;
+  children: JSX.Element;
 }
 
 export default function TabLayout(props: TabLayoutProps) {
-  function switchTab(id: TabId) {
-    if (currentTab() === id) return;
-    haptic("selection");
-    setCurrentTab(id);
-  }
-
   return (
     <div class={s.layout}>
-      <div class={s.content} data-tab={currentTab()}>
-        {props.children(currentTab)}
-      </div>
+      <div class={s.content}>{props.children}</div>
 
       <nav class={s.nav}>
         <For each={tabs}>
           {(tab) => (
-            <button
-              class={currentTab() === tab.id ? s.tabBtnActive : s.tabBtn}
-              onClick={() => switchTab(tab.id)}
+            <A
+              href={tab.path}
+              end={tab.end}
+              class={s.tabBtn}
+              activeClass={s.tabBtnActive}
+              onClick={() => haptic("selection")}
             >
               {tab.icon()}
-              <span class={currentTab() === tab.id ? s.tabLabelActive : s.tabLabel}>{tab.label}</span>
-            </button>
+              <span class={s.tabLabel}>{tab.label}</span>
+            </A>
           )}
         </For>
       </nav>

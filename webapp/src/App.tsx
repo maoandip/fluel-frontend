@@ -1,7 +1,9 @@
-import { Component, Show, Match, Switch, Suspense, ErrorBoundary, createSignal, createEffect, lazy } from "solid-js";
+import { Component, Show, Suspense, ErrorBoundary, createSignal, createEffect, lazy, type JSX } from "solid-js";
+import { Router, Route } from "@solidjs/router";
 import { AppProvider, useApp } from "./stores/app";
 import Toast from "./components/ui/Toast";
 import TabLayout from "./components/layout/TabLayout";
+import BackButtonHandler from "./components/layout/BackButtonHandler";
 import Skeleton from "./components/ui/Skeleton";
 import SwapPage from "./pages/SwapPage";
 import BetaGate from "./components/layout/BetaGate";
@@ -37,13 +39,14 @@ const Splash = (props: { fadeOut?: boolean }) => (
   </div>
 );
 
-const AppContent: Component = () => {
+// AppContent wraps route children with splash + TabLayout + error/suspense
+// boundaries. The route children (matched route component) are the tab
+// content, slotted into TabLayout's content area.
+const AppContent: Component<{ children?: JSX.Element }> = (props) => {
   const { isReady } = useApp();
   const [showSplash, setShowSplash] = createSignal(true);
   const [fadeOut, setFadeOut] = createSignal(false);
 
-  // Flip splash out as soon as the AppProvider's resources resolve.
-  // Reactive on isReady() — no manual polling.
   createEffect(() => {
     if (isReady() && !fadeOut()) {
       setFadeOut(true);
@@ -53,24 +56,17 @@ const AppContent: Component = () => {
 
   return (
     <>
+      <BackButtonHandler />
       <Show when={showSplash()}>
         <Splash fadeOut={fadeOut()} />
       </Show>
       <Show when={isReady()}>
         <TabLayout>
-          {(tab) => (
-            <ErrorBoundary fallback={(err, reset) => <RouteErrorFallback err={err} reset={reset} />}>
-              <Suspense fallback={<div class={splash.suspense}><Skeleton rows={5} /></div>}>
-                <Switch>
-                  <Match when={tab() === "swap"}><SwapPage /></Match>
-                  <Match when={tab() === "balance"}><BalancesPage /></Match>
-                  <Match when={tab() === "history"}><HistoryPage /></Match>
-                  <Match when={tab() === "automate"}><AutomatePage /></Match>
-                  <Match when={tab() === "earn"}><EarnPage /></Match>
-                </Switch>
-              </Suspense>
-            </ErrorBoundary>
-          )}
+          <ErrorBoundary fallback={(err, reset) => <RouteErrorFallback err={err} reset={reset} />}>
+            <Suspense fallback={<div class={splash.suspense}><Skeleton rows={5} /></div>}>
+              {props.children}
+            </Suspense>
+          </ErrorBoundary>
         </TabLayout>
       </Show>
       <Toast />
@@ -78,17 +74,31 @@ const AppContent: Component = () => {
   );
 };
 
-const App: Component = () => (
+// Router shell — chooses between the beta gate and the real app, and
+// wraps route children in the app provider + splash + tab layout.
+const AppShell: Component<{ children?: JSX.Element }> = (props) => (
   <Show
     when={BETA_MODE && !isTester()}
     fallback={
       <AppProvider>
-        <AppContent />
+        <AppContent>{props.children}</AppContent>
       </AppProvider>
     }
   >
     <BetaGate />
   </Show>
+);
+
+const App: Component = () => (
+  <Router root={AppShell}>
+    <Route path="/"         component={SwapPage} />
+    <Route path="/balance"  component={BalancesPage} />
+    <Route path="/history"  component={HistoryPage} />
+    <Route path="/automate" component={AutomatePage} />
+    <Route path="/earn"     component={EarnPage} />
+    {/* Fallback: any unknown path lands on the swap page */}
+    <Route path="*"         component={SwapPage} />
+  </Router>
 );
 
 export default App;
