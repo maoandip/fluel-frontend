@@ -14,6 +14,19 @@ import {
   QuoteResponseSchema,
   SwapStatusSchema,
   ConfirmResponseSchema,
+  DestinationResponseSchema,
+  GasPricesResponseSchema,
+  AlertListResponseSchema,
+  AlertCreateResponseSchema,
+  AlertDeleteResponseSchema,
+  RefillListResponseSchema,
+  RefillCreateResponseSchema,
+  RefillDeleteResponseSchema,
+  ReferralStatsResponseSchema,
+  GiftListResponseSchema,
+  GiftCreateResponseSchema,
+  WithdrawResponseSchema,
+  LifiHistoryResponseSchema,
 } from "./lib/schemas";
 
 // ── Fetch wrapper ──────────────────────────────────────────────────
@@ -72,10 +85,14 @@ export function getSession() {
 }
 
 export function setDestination(address: string) {
-  return api<{ destinationAddress: string }>("/api/destination", {
-    method: "POST",
-    body: JSON.stringify({ address }),
-  });
+  return api(
+    "/api/destination",
+    {
+      method: "POST",
+      body: JSON.stringify({ address }),
+    },
+    DestinationResponseSchema,
+  );
 }
 
 // ── Chains ─────────────────────────────────────────────────────────
@@ -118,6 +135,7 @@ export function getSwapStatus(txHash: string) {
   return api(`/api/status?txHash=${encodeURIComponent(txHash)}`, {}, SwapStatusSchema);
 }
 
+// ── LI.FI history ──────────────────────────────────────────────────
 
 export interface LifiToken {
   address: string;
@@ -158,72 +176,97 @@ export interface LifiHistoryResponse {
 }
 
 export function getLifiHistory(page = 1, pageSize = 20) {
-  return api<LifiHistoryResponse>(`/api/lifi-history?page=${page}&pageSize=${pageSize}`);
+  // The schema only validates the envelope — LI.FI transfer inner shapes
+  // change over time and are consumed loosely by HistoryPage. The cast is
+  // safe because LifiHistoryResponseSchema confirms `transfers` is an array;
+  // element typing is enforced by TS at the call site via LifiTransfer.
+  return api("/api/lifi-history?page=" + page + "&pageSize=" + pageSize, {}, LifiHistoryResponseSchema) as Promise<LifiHistoryResponse>;
 }
 
 // ── Gas prices ─────────────────────────────────────────────────────
 
 export function getGasPrices() {
-  return api<GasPriceData>("/api/gas-prices");
+  return api("/api/gas-prices", {}, GasPricesResponseSchema) as Promise<GasPriceData>;
 }
 
 // ── Alerts ─────────────────────────────────────────────────────────
 
 export function getAlerts() {
-  return api<{ alerts: GasAlert[] }>("/api/alerts");
+  return api("/api/alerts", {}, AlertListResponseSchema) as Promise<{ alerts: GasAlert[] }>;
 }
 
-export function postAlert(chainName: string, thresholdGwei: number) {
-  return api<GasAlert>("/api/alerts", {
-    method: "POST",
-    body: JSON.stringify({ chainName, thresholdGwei }),
-  });
+export function postAlert(chain: string, thresholdGwei: number) {
+  // Backend returns { ok: true } — not the alert object. Callers await this
+  // for the side effect; nothing reads the return value.
+  return api(
+    "/api/alerts",
+    {
+      method: "POST",
+      body: JSON.stringify({ chain, thresholdGwei }),
+    },
+    AlertCreateResponseSchema,
+  );
 }
 
-export function deleteAlert(chainName: string) {
-  return api<{ ok: boolean }>("/api/alerts", {
-    method: "DELETE",
-    body: JSON.stringify({ chainName }),
-  });
+export function deleteAlert(chain: string) {
+  // Backend reads `chain` from the query string, not the request body.
+  return api(
+    `/api/alerts?chain=${encodeURIComponent(chain)}`,
+    { method: "DELETE" },
+    AlertDeleteResponseSchema,
+  );
 }
 
 // ── Auto-refills ───────────────────────────────────────────────────
 
 export function getRefills() {
-  return api<{ refills: AutoRefill[] }>("/api/refills");
+  return api("/api/refills", {}, RefillListResponseSchema) as Promise<{ refills: AutoRefill[] }>;
 }
 
-export function postRefill(chainName: string, thresholdNative: number, refillAmountUsd: number, sourceChainName: string) {
-  return api<AutoRefill>("/api/refills", {
-    method: "POST",
-    body: JSON.stringify({ chainName, thresholdNative, refillAmountUsd, sourceChainName }),
-  });
+export function postRefill(chain: string, threshold: number, amount: number, sourceChain: string) {
+  // Backend returns { refill: AutoRefill } — envelope, not the bare object.
+  // Field names in the request body also differ from the frontend-facing
+  // camelCase: backend expects `chain`, `threshold`, `amount`, `sourceChain`.
+  return api(
+    "/api/refills",
+    {
+      method: "POST",
+      body: JSON.stringify({ chain, threshold, amount, sourceChain }),
+    },
+    RefillCreateResponseSchema,
+  );
 }
 
-export function deleteRefill(chainName: string) {
-  return api<{ ok: boolean }>("/api/refills", {
-    method: "DELETE",
-    body: JSON.stringify({ chainName }),
-  });
+export function deleteRefill(chain: string) {
+  // Same query-string convention as deleteAlert.
+  return api(
+    `/api/refills?chain=${encodeURIComponent(chain)}`,
+    { method: "DELETE" },
+    RefillDeleteResponseSchema,
+  );
 }
 
 // ── Referrals ─────────────────────────────────────────────────────
 
 export function getReferralStats() {
-  return api<ReferralStats>("/api/referrals");
+  return api("/api/referrals", {}, ReferralStatsResponseSchema) as Promise<ReferralStats & { refLink: string }>;
 }
 
 // ── Gifts ─────────────────────────────────────────────────────────
 
 export function getGifts() {
-  return api<{ gifts: Gift[] }>("/api/gifts");
+  return api("/api/gifts", {}, GiftListResponseSchema) as Promise<{ gifts: Gift[] }>;
 }
 
 export function postGift(amountUsd: number, chain: string) {
-  return api<{ gift: Gift; claimLink: string }>("/api/gifts", {
-    method: "POST",
-    body: JSON.stringify({ amountUsd, chain }),
-  });
+  return api(
+    "/api/gifts",
+    {
+      method: "POST",
+      body: JSON.stringify({ amountUsd, chain }),
+    },
+    GiftCreateResponseSchema,
+  ) as Promise<{ gift: Gift; claimLink: string }>;
 }
 
 // ── Withdraw ─────────────────────────────────────────────────────
@@ -237,8 +280,12 @@ export interface WithdrawResult {
 }
 
 export function postWithdraw(chain?: string) {
-  return api<{ withdrawals: WithdrawResult[] }>("/api/withdraw", {
-    method: "POST",
-    body: JSON.stringify(chain ? { chain } : {}),
-  });
+  return api(
+    "/api/withdraw",
+    {
+      method: "POST",
+      body: JSON.stringify(chain ? { chain } : {}),
+    },
+    WithdrawResponseSchema,
+  ) as Promise<{ withdrawals: WithdrawResult[] }>;
 }
