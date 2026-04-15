@@ -1,9 +1,11 @@
 /* @refresh reload */
 import { render } from "solid-js/web";
-import { lazy } from "solid-js";
+import { lazy, Suspense, ErrorBoundary, type JSX } from "solid-js";
 import { Router, Route } from "@solidjs/router";
 import Layout from "./components/Layout";
 import Landing from "./pages/Landing";
+import PageSkeleton from "./components/PageSkeleton";
+import RouteErrorFallback from "./components/RouteErrorFallback";
 import "./styles/global.css";
 
 // Lazy-load non-landing pages for smaller initial bundle
@@ -17,20 +19,40 @@ const GuideList = lazy(() => import("./pages/guides/GuideList"));
 const GuidePage = lazy(() => import("./pages/guides/GuidePage"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
+// Every route renders inside the same error + suspense boundary, so a throw
+// in one page never blanks the header/footer and lazy chunk downloads show
+// a skeleton instead of a flash of empty content.
+function RouteShell(props: { children: JSX.Element }) {
+  return (
+    <ErrorBoundary fallback={(err, reset) => <RouteErrorFallback err={err} reset={reset} />}>
+      <Suspense fallback={<PageSkeleton />}>{props.children}</Suspense>
+    </ErrorBoundary>
+  );
+}
+
 const root = document.getElementById("root");
 if (!root) throw new Error("Root element not found");
 
-render(() => (
-  <Router root={Layout}>
-    <Route path="/" component={Landing} />
-    <Route path="/chains" component={Chains} />
-    <Route path="/how-it-works" component={HowItWorks} />
-    <Route path="/roadmap" component={Roadmap} />
-    <Route path="/guides" component={GuideList} />
-    <Route path="/guides/:slug" component={GuidePage} />
-    <Route path="/terms" component={Terms} />
-    <Route path="/privacy" component={Privacy} />
-    <Route path="/feedback" component={Feedback} />
-    <Route path="*" component={NotFound} />
-  </Router>
-), root);
+render(
+  () => (
+    <Router
+      root={(props) => (
+        <Layout>
+          <RouteShell>{props.children}</RouteShell>
+        </Layout>
+      )}
+    >
+      <Route path="/" component={Landing} />
+      <Route path="/chains" component={Chains} />
+      <Route path="/how-it-works" component={HowItWorks} />
+      <Route path="/roadmap" component={Roadmap} />
+      <Route path="/guides" component={GuideList} />
+      <Route path="/guides/:slug" component={GuidePage} />
+      <Route path="/terms" component={Terms} />
+      <Route path="/privacy" component={Privacy} />
+      <Route path="/feedback" component={Feedback} />
+      <Route path="*" component={NotFound} />
+    </Router>
+  ),
+  root,
+);

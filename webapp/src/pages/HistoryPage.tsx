@@ -1,8 +1,8 @@
 import { Component, Show, For, createSignal, createMemo, onMount, onCleanup } from "solid-js";
 import { getLifiHistory, type LifiTransfer } from "../api";
 import { useApp } from "../stores/app";
-import EmptyState from "../components/EmptyState";
-import Skeleton from "../components/Skeleton";
+import EmptyState from "../components/ui/EmptyState";
+import Skeleton from "../components/ui/Skeleton";
 import { txStatusClass } from "../lib/status";
 import s from "./HistoryPage.module.css";
 

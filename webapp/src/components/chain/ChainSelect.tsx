@@ -1,5 +1,5 @@
 import { For } from "solid-js";
-import type { Chain } from "../types";
+import type { Chain } from "../../types";
 import s from "./ChainSelect.module.css";
 
 export interface ChainSelectProps {

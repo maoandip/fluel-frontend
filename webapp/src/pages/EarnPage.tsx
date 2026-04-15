@@ -1,17 +1,18 @@
-import {
-  Component, Show, For,
-  createSignal, createResource,
-} from "solid-js";
+import { Component, Show, For, Suspense, ErrorBoundary, createSignal } from "solid-js";
+import { createAsync, revalidate } from "@solidjs/router";
 import { useApp } from "../stores/app";
 import { showToast } from "../stores/toast";
-import { haptic } from "../telegram";
-import { getReferralStats, getGifts, postGift } from "../api";
-import type { ReferralStats, Gift } from "../types";
-import EmptyState from "../components/EmptyState";
-import Skeleton from "../components/Skeleton";
-import ChainPicker from "../components/ChainPicker";
+import { haptic } from "../lib/telegram";
+import { postGift } from "../api";
+import EmptyState from "../components/ui/EmptyState";
+import Skeleton from "../components/ui/Skeleton";
+import ChainPicker from "../components/chain/ChainPicker";
 import { giftStatusClass } from "../lib/status";
+import { queries } from "../lib/queries";
 import s from "./EarnPage.module.css";
+
+const refetchStats = () => revalidate("referralStats");
+const refetchGifts = () => revalidate("gifts");
 
 type Section = "referrals" | "gifts";
 const GIFT_AMOUNTS = [1, 3, 5, 10, 25];
@@ -29,8 +30,8 @@ const EarnPage: Component = () => {
   const { chains } = useApp();
 
   const [section, setSection] = createSignal<Section>("referrals");
-  const [refStats, { refetch: refetchStats }] = createResource<ReferralStats>(() => getReferralStats());
-  const [gifts, { refetch: refetchGifts }] = createResource<Gift[]>(async () => (await getGifts()).gifts);
+  const refStats = createAsync(() => queries.referralStats());
+  const gifts = createAsync(() => queries.gifts());
   const [giftChain, setGiftChain] = createSignal("");
   const [giftAmount, setGiftAmount] = createSignal(3);
   const [giftLoading, setGiftLoading] = createSignal(false);
@@ -92,15 +93,14 @@ const EarnPage: Component = () => {
 
       {/* ═══ REFERRALS ═══ */}
       <Show when={section() === "referrals"}>
-        <Show when={refStats.loading}><div class={s.card}><Skeleton rows={3} /></div></Show>
-        <Show when={!refStats.loading && refStats.error}>
+        <ErrorBoundary fallback={(_err, reset) => (
           <div class="error-state">
             <span class="error-state-msg">Failed to load referral stats</span>
-            <button class="retry-btn" onClick={() => refetchStats()}>Retry</button>
+            <button class="retry-btn" onClick={() => { refetchStats(); reset(); }}>Retry</button>
           </div>
-        </Show>
-
-        <Show when={!refStats.loading && !refStats.error && refStats()}>
+        )}>
+        <Suspense fallback={<div class={s.card}><Skeleton rows={3} /></div>}>
+        <Show when={refStats()}>
           <div class={s.card}>
             <div class={s.label}>Your Referrals</div>
             <div class={s.hint}>Earn 20% of swap fees from your referrals</div>
@@ -132,6 +132,8 @@ const EarnPage: Component = () => {
             </div>
           </div>
         </Show>
+        </Suspense>
+        </ErrorBoundary>
       </Show>
 
       {/* ═══ GIFTS ═══ */}
@@ -172,11 +174,17 @@ const EarnPage: Component = () => {
           </div>
         </Show>
 
-        <Show when={gifts.loading}><div class={s.card}><Skeleton rows={2} /></div></Show>
-        <Show when={!gifts.loading && gifts() && gifts()!.length === 0}>
+        <ErrorBoundary fallback={(_err, reset) => (
+          <div class="error-state">
+            <span class="error-state-msg">Failed to load gifts</span>
+            <button class="retry-btn" onClick={() => { refetchGifts(); reset(); }}>Retry</button>
+          </div>
+        )}>
+        <Suspense fallback={<div class={s.card}><Skeleton rows={2} /></div>}>
+        <Show when={gifts() && gifts()!.length === 0}>
           <EmptyState icon={<span>&#127873;</span>} message="No gifts yet" hint="Create a gas gift to send to a friend." />
         </Show>
-        <Show when={!gifts.loading && gifts() && gifts()!.length > 0}>
+        <Show when={gifts() && gifts()!.length > 0}>
           <div class={s.card}>
             <div class={s.label}>Your Gifts</div>
             <div class="item-list">
@@ -196,6 +204,8 @@ const EarnPage: Component = () => {
             </div>
           </div>
         </Show>
+        </Suspense>
+        </ErrorBoundary>
       </Show>
     </div>
   );

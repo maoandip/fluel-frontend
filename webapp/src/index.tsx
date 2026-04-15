@@ -1,6 +1,6 @@
 /* @refresh reload */
 import { render } from "solid-js/web";
-import { initTelegram } from "./telegram";
+import { initTelegram } from "./lib/telegram";
 import "./styles/shared.css";
 import App from "./App";
 

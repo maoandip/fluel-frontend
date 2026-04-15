@@ -1,20 +1,22 @@
 import {
-  Component, Show, For,
-  createSignal, createResource, onMount, onCleanup,
+  Component, Show, For, Suspense, ErrorBoundary,
+  createSignal, onMount, onCleanup,
 } from "solid-js";
+import { createAsync, revalidate } from "@solidjs/router";
 import { useApp } from "../stores/app";
 import { showToast } from "../stores/toast";
-import { haptic, showConfirm } from "../telegram";
-import {
-  getGasPrices, getAlerts, postAlert, deleteAlert,
-  getRefills, postRefill, deleteRefill,
-} from "../api";
+import { haptic, showConfirm } from "../lib/telegram";
+import { postAlert, deleteAlert, postRefill, deleteRefill } from "../api";
 import { fmtGwei, gweiLevel } from "../lib/format";
-import type { GasAlert, AutoRefill, GasPriceData } from "../types";
-import EmptyState from "../components/EmptyState";
-import Skeleton from "../components/Skeleton";
-import ChainPicker from "../components/ChainPicker";
+import { queries } from "../lib/queries";
+import EmptyState from "../components/ui/EmptyState";
+import Skeleton from "../components/ui/Skeleton";
+import ChainPicker from "../components/chain/ChainPicker";
 import s from "./AutomatePage.module.css";
+
+const refetchGasPrices = () => revalidate("gasPrices");
+const refetchAlerts = () => revalidate("alerts");
+const refetchRefills = () => revalidate("refills");
 
 type Section = "alerts" | "refill";
 const TOP_CHAINS = 10;
@@ -24,13 +26,13 @@ const AutomatePage: Component = () => {
 
   const [section, setSection] = createSignal<Section>("alerts");
   const [showAllPrices, setShowAllPrices] = createSignal(false);
-  const [gasPrices, { refetch: refetchGasPrices }] = createResource<GasPriceData>(() => getGasPrices());
-  const [alerts, { refetch: refetchAlerts }] = createResource<GasAlert[]>(async () => (await getAlerts()).alerts);
+  const gasPrices = createAsync(() => queries.gasPrices());
+  const alerts = createAsync(() => queries.alerts());
   const [alertChain, setAlertChain] = createSignal("");
   const [alertThreshold, setAlertThreshold] = createSignal("");
   const [alertLoading, setAlertLoading] = createSignal(false);
 
-  const [refills, { refetch: refetchRefills }] = createResource<AutoRefill[]>(async () => (await getRefills()).refills);
+  const refills = createAsync(() => queries.refills());
   const [refillGasChain, setRefillGasChain] = createSignal("");
   const [refillSourceChain, setRefillSourceChain] = createSignal("");
   const [refillThreshold, setRefillThreshold] = createSignal("");
@@ -102,15 +104,14 @@ const AutomatePage: Component = () => {
 
       {/* ═══ GAS ALERTS ═══ */}
       <Show when={section() === "alerts"}>
-        <Show when={gasPrices.loading}><div class={s.card}><Skeleton rows={3} /></div></Show>
-        <Show when={!gasPrices.loading && gasPrices.error}>
+        <ErrorBoundary fallback={(_err, reset) => (
           <div class="error-state">
             <span class="error-state-msg">Failed to load gas prices</span>
-            <button class="retry-btn" onClick={() => refetchGasPrices()}>Retry</button>
+            <button class="retry-btn" onClick={() => { refetchGasPrices(); reset(); }}>Retry</button>
           </div>
-        </Show>
-
-        <Show when={!gasPrices.loading && !gasPrices.error && gasPrices()}>
+        )}>
+        <Suspense fallback={<div class={s.card}><Skeleton rows={3} /></div>}>
+        <Show when={gasPrices()}>
           {(() => {
             const data = gasPrices()!;
             const sorted = () => [...data.chains]
@@ -156,6 +157,8 @@ const AutomatePage: Component = () => {
             );
           })()}
         </Show>
+        </Suspense>
+        </ErrorBoundary>
 
         {/* Create alert */}
         <div class={s.card}>
@@ -178,11 +181,17 @@ const AutomatePage: Component = () => {
         </div>
 
         {/* Alert list */}
-        <Show when={alerts.loading}><div class={s.card}><Skeleton rows={2} /></div></Show>
-        <Show when={!alerts.loading && alerts() && alerts()!.length === 0}>
+        <ErrorBoundary fallback={(_err, reset) => (
+          <div class="error-state">
+            <span class="error-state-msg">Failed to load alerts</span>
+            <button class="retry-btn" onClick={() => { refetchAlerts(); reset(); }}>Retry</button>
+          </div>
+        )}>
+        <Suspense fallback={<div class={s.card}><Skeleton rows={2} /></div>}>
+        <Show when={alerts() && alerts()!.length === 0}>
           <EmptyState icon={<span>&#128276;</span>} message="No gas alerts" hint="Create an alert to get notified when gas prices drop." />
         </Show>
-        <Show when={!alerts.loading && alerts() && alerts()!.length > 0}>
+        <Show when={alerts() && alerts()!.length > 0}>
           <div class={s.card}>
             <div class={s.label}>Your Alerts</div>
             <div class="item-list">
@@ -200,6 +209,8 @@ const AutomatePage: Component = () => {
             </div>
           </div>
         </Show>
+        </Suspense>
+        </ErrorBoundary>
       </Show>
 
       {/* ═══ AUTO-REFILL ═══ */}
@@ -233,11 +244,17 @@ const AutomatePage: Component = () => {
           </button>
         </div>
 
-        <Show when={refills.loading}><div class={s.card}><Skeleton rows={2} /></div></Show>
-        <Show when={!refills.loading && refills() && refills()!.length === 0}>
+        <ErrorBoundary fallback={(_err, reset) => (
+          <div class="error-state">
+            <span class="error-state-msg">Failed to load refills</span>
+            <button class="retry-btn" onClick={() => { refetchRefills(); reset(); }}>Retry</button>
+          </div>
+        )}>
+        <Suspense fallback={<div class={s.card}><Skeleton rows={2} /></div>}>
+        <Show when={refills() && refills()!.length === 0}>
           <EmptyState icon={<span>&#9889;</span>} message="No auto-refills" hint="Set up automatic gas refills to never run out." />
         </Show>
-        <Show when={!refills.loading && refills() && refills()!.length > 0}>
+        <Show when={refills() && refills()!.length > 0}>
           <div class={s.card}>
             <div class={s.label}>Your Refills</div>
             <div class="item-list">
@@ -257,6 +274,8 @@ const AutomatePage: Component = () => {
             </div>
           </div>
         </Show>
+        </Suspense>
+        </ErrorBoundary>
       </Show>
     </div>
   );

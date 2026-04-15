@@ -1,6 +1,6 @@
 import { createSignal, Show } from "solid-js";
-import { haptic } from "../telegram";
-import type { Chain } from "../types";
+import { haptic } from "../../lib/telegram";
+import type { Chain } from "../../types";
 import ChainSelectorModal from "./ChainSelectorModal";
 import s from "./ChainPicker.module.css";
 

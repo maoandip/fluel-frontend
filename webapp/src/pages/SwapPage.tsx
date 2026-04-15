@@ -1,16 +1,19 @@
 import { Component, Show, createSignal, createMemo, createEffect, onCleanup } from "solid-js";
+import { createAsync } from "@solidjs/router";
+import { useMachine } from "@xstate/solid";
 import { useApp } from "../stores/app";
-import { balances, refetchBalances } from "../stores/balances";
+import { balancesQuery, refetchBalances } from "../stores/balances";
 import { showToast } from "../stores/toast";
 import { postQuote, postConfirm, getSwapStatus } from "../api";
-import { BackButton, haptic } from "../telegram";
-import { NATIVE_TOKEN, type QuoteResponse } from "../types";
-import ChainSelectorModal from "../components/ChainSelectorModal";
-import TokenChainIcon from "../components/TokenChainIcon";
+import { BackButton, haptic } from "../lib/telegram";
+import { NATIVE_TOKEN } from "../types";
+import { useLocalStorage } from "../lib/hooks/useLocalStorage";
+import { swapMachine } from "../lib/machines/swap";
+import ChainSelectorModal from "../components/chain/ChainSelectorModal";
+import TokenChainIcon from "../components/chain/TokenChainIcon";
 import s from "./SwapPage.module.css";
 
 type SelectorTarget = "from" | "to" | null;
-type SwapProgress = "confirming" | "pending" | "done" | "failed";
 
 const DEBOUNCE_MS = 500;
 const QUOTE_TTL_MS = 30_000;
@@ -18,24 +21,35 @@ const STATUS_POLL_MS = 4_000;
 
 const SwapPage: Component = () => {
   const { chains, receiveChains, destinationAddress, setDestinationAddress } = useApp();
+  const balances = createAsync(() => balancesQuery().then((b) => b.balances));
 
-  const savedFrom = localStorage.getItem("fluel:fromChain") ?? "";
-  const savedTo = localStorage.getItem("fluel:toChain") ?? "";
-  const [fromChain, setFromChain] = createSignal(savedFrom);
-  const [toChain, setToChain] = createSignal(savedTo);
+  // ── Machine: source of truth for swap-flow state ──
+  const [state, send] = useMachine(swapMachine);
+
+  // Derived accessors so the JSX can keep reading quoteData(), progress(), etc.
+  const quoteData = () => state.context.quote;
+  const quoting = () => state.matches("quoting");
+  const txHash = () => state.context.txHash;
+  const statusMsg = () => state.context.statusMsg;
+  const progress = (): "confirming" | "pending" | "done" | "failed" | null => {
+    if (state.matches("confirming")) return "confirming";
+    if (state.matches("pending")) return "pending";
+    if (state.matches("done")) return "done";
+    if (state.matches("failed")) return "failed";
+    return null;
+  };
+
+  // ── User inputs (regular signals) ──
+  const [fromChain, setFromChain] = useLocalStorage<string>("fluel:fromChain", "");
+  const [toChain, setToChain] = useLocalStorage<string>("fluel:toChain", "");
   const [destInput, setDestInput] = createSignal("");
   const [destSaving, setDestSaving] = createSignal(false);
   const [destEditing, setDestEditing] = createSignal(false);
   const [amount, setAmount] = createSignal("");
-  const [quoteData, setQuoteData] = createSignal<QuoteResponse | null>(null);
-  const [quoting, setQuoting] = createSignal(false);
   const [quoteAge, setQuoteAge] = createSignal(0);
-  const [txHash, setTxHash] = createSignal("");
-  const [progress, setProgress] = createSignal<SwapProgress | null>(null);
-  const [statusMsg, setStatusMsg] = createSignal("");
   const [selectorOpen, setSelectorOpen] = createSignal<SelectorTarget>(null);
 
-  // Persist chain selections and auto-select defaults
+  // Default chain selection on first load
   const DEFAULT_FROM = ["Base", "Arbitrum", "Polygon", "OP Mainnet", "Ethereum"];
   const DEFAULT_TO = ["Ethereum", "Arbitrum", "Base", "OP Mainnet", "Polygon"];
 
@@ -44,33 +58,29 @@ const SwapPage: Component = () => {
     const recv = receiveChains();
     if (pay.length > 0) {
       const cur = fromChain();
-      // Clear saved value if it's no longer valid
-      if (cur && !pay.some(c => c.name === cur)) setFromChain("");
+      if (cur && !pay.some((c) => c.name === cur)) setFromChain("");
       if (!fromChain()) {
-        const match = DEFAULT_FROM.find(name => pay.some(c => c.name === name));
+        const match = DEFAULT_FROM.find((name) => pay.some((c) => c.name === name));
         if (match) setFromChain(match);
       }
     }
     if (recv.length > 0) {
       const cur = toChain();
-      if (cur && !recv.some(c => c.name === cur)) setToChain("");
+      if (cur && !recv.some((c) => c.name === cur)) setToChain("");
       if (!toChain()) {
         const from = fromChain();
-        const match = DEFAULT_TO.find(name => name !== from && recv.some(c => c.name === name));
+        const match = DEFAULT_TO.find((name) => name !== from && recv.some((c) => c.name === name));
         if (match) setToChain(match);
       }
     }
   });
 
-  createEffect(() => { const v = fromChain(); if (v) localStorage.setItem("fluel:fromChain", v); });
-  createEffect(() => { const v = toChain(); if (v) localStorage.setItem("fluel:toChain", v); });
-
+  // ── Quote fetch orchestration ──
   let debounceTimer: ReturnType<typeof setTimeout> | undefined;
   let abortController: AbortController | undefined;
   let quoteVersion = 0;
   let quoteAgeTimer: ReturnType<typeof setInterval> | undefined;
   let statusPollTimer: ReturnType<typeof setInterval> | undefined;
-
 
   onCleanup(() => {
     clearTimeout(debounceTimer);
@@ -83,11 +93,11 @@ const SwapPage: Component = () => {
   const fromBalance = createMemo(() => {
     const b = balances();
     if (!b) return undefined;
-    const chain = chains().find(c => c.name === fromChain());
+    const chain = chains().find((c) => c.name === fromChain());
     if (!chain) return undefined;
     const tokens = b[String(chain.id)];
     if (!tokens) return undefined;
-    const stable = tokens.find(t => t.address.toLowerCase() !== NATIVE_TOKEN);
+    const stable = tokens.find((t) => t.address.toLowerCase() !== NATIVE_TOKEN);
     if (!stable || stable.amount === "0") return undefined;
     const human = Number(BigInt(stable.amount)) / 10 ** stable.decimals;
     return human > 0 ? String(human) : undefined;
@@ -97,8 +107,6 @@ const SwapPage: Component = () => {
     const a = parseFloat(amount());
     return fromChain() && toChain() && fromChain() !== toChain() && a > 0;
   });
-
-  // ── Auto-quote with freshness tracking ──
 
   function startQuoteAge() {
     clearInterval(quoteAgeTimer);
@@ -113,54 +121,66 @@ const SwapPage: Component = () => {
   }
 
   async function fetchQuote() {
-    if (!canQuote()) { setQuoteData(null); return; }
+    if (!canQuote()) {
+      send({ type: "CLEAR" });
+      return;
+    }
     abortController?.abort();
     abortController = new AbortController();
     const version = ++quoteVersion;
-    setQuoting(true);
+    send({ type: "QUOTE_REQUEST" });
     try {
       const quote = await postQuote(amount(), fromChain(), toChain(), abortController.signal);
       if (version === quoteVersion) {
-        setQuoteData(quote);
+        send({ type: "QUOTE_SUCCESS", quote });
         startQuoteAge();
       }
-    } catch (err: any) {
-      if (err?.name === "AbortError") return;
-      if (version === quoteVersion) setQuoteData(null);
-    } finally {
-      if (version === quoteVersion) setQuoting(false);
+    } catch (err: unknown) {
+      if ((err as { name?: string })?.name === "AbortError") return;
+      if (version === quoteVersion) {
+        const msg = err instanceof Error ? err.message : "Quote failed";
+        send({ type: "QUOTE_FAILURE", error: msg });
+      }
     }
   }
 
   function scheduleQuote() {
     clearTimeout(debounceTimer);
     clearInterval(quoteAgeTimer);
-    setQuoteData(null);
-    if (!canQuote()) { setQuoting(false); return; }
-    setQuoting(true);
+    if (!canQuote()) {
+      send({ type: "CLEAR" });
+      return;
+    }
+    send({ type: "QUOTE_REQUEST" });
     debounceTimer = setTimeout(fetchQuote, DEBOUNCE_MS);
   }
 
-  createEffect(() => { amount(); fromChain(); toChain(); scheduleQuote(); });
+  createEffect(() => {
+    amount();
+    fromChain();
+    toChain();
+    scheduleQuote();
+  });
 
   // ── Post-swap status polling ──
-
   function startStatusPoll(hash: string) {
     clearInterval(statusPollTimer);
     statusPollTimer = setInterval(async () => {
       try {
         const res = await getSwapStatus(hash);
-        setStatusMsg(res.message || res.substatus || res.status);
+        const msg = res.message || res.substatus || res.status;
         const st = res.status.toLowerCase();
         if (st === "done" || st === "completed") {
           clearInterval(statusPollTimer);
-          setProgress("done");
+          send({ type: "STATUS_DONE", message: msg });
           haptic("success");
           refetchBalances();
         } else if (st === "failed") {
           clearInterval(statusPollTimer);
-          setProgress("failed");
+          send({ type: "STATUS_FAILED", message: msg });
           haptic("error");
+        } else {
+          send({ type: "STATUS_UPDATE", message: msg });
         }
       } catch {
         // keep polling on network errors
@@ -169,10 +189,12 @@ const SwapPage: Component = () => {
   }
 
   // ── Actions ──
-
   function setMax() {
     const b = fromBalance();
-    if (b) { setAmount(b); haptic("light"); }
+    if (b) {
+      setAmount(b);
+      haptic("light");
+    }
   }
 
   async function handleConfirm() {
@@ -184,29 +206,31 @@ const SwapPage: Component = () => {
       haptic("error");
       return;
     }
-    setProgress("confirming");
+    send({ type: "CONFIRM" });
     try {
       const result = await postConfirm();
-      setTxHash(result.txHash);
-      setProgress("pending");
-      setStatusMsg("Transaction submitted...");
+      send({ type: "CONFIRM_SUCCESS", txHash: result.txHash });
       startStatusPoll(result.txHash);
-    } catch (err: any) {
-      showToast(err.message || "Swap failed");
-      setProgress(null);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Swap failed";
+      showToast(msg);
+      send({ type: "CONFIRM_FAILURE", error: msg });
       haptic("error");
     }
   }
 
   function resetSwap() {
-    setAmount(""); setQuoteData(null); setTxHash(""); setProgress(null);
-    setStatusMsg(""); clearInterval(statusPollTimer); clearInterval(quoteAgeTimer);
-    refetchBalances(); BackButton.hide();
+    setAmount("");
+    clearInterval(statusPollTimer);
+    clearInterval(quoteAgeTimer);
+    send({ type: "RESET" });
+    refetchBalances();
+    BackButton.hide();
   }
 
   function retrySwap() {
-    setTxHash(""); setProgress(null); setStatusMsg("");
     clearInterval(statusPollTimer);
+    send({ type: "RESET" });
     scheduleQuote();
   }
 
@@ -216,10 +240,12 @@ const SwapPage: Component = () => {
   });
 
   // ── Chain selector ──
-
-  const getPayChain = (name: string) => chains().find(c => c.name === name);
-  const getReceiveChain = (name: string) => receiveChains().find(c => c.name === name);
-  function openSelector(target: "from" | "to") { haptic("light"); setSelectorOpen(target); }
+  const getPayChain = (name: string) => chains().find((c) => c.name === name);
+  const getReceiveChain = (name: string) => receiveChains().find((c) => c.name === name);
+  function openSelector(target: "from" | "to") {
+    haptic("light");
+    setSelectorOpen(target);
+  }
   function handleSelectorSelect(name: string) {
     const target = selectorOpen();
     if (target === "from") setFromChain(name);
@@ -268,7 +294,6 @@ const SwapPage: Component = () => {
   };
 
   // ── Display values ──
-
   const quoteDisplay = createMemo(() => {
     const q = quoteData();
     const isQuoting = quoting();
@@ -292,7 +317,11 @@ const SwapPage: Component = () => {
 
   async function saveDestination() {
     const addr = destInput().trim();
-    if (!isValidAddress(addr)) { showToast("Invalid Ethereum address"); haptic("error"); return; }
+    if (!isValidAddress(addr)) {
+      showToast("Invalid Ethereum address");
+      haptic("error");
+      return;
+    }
     setDestSaving(true);
     try {
       await setDestinationAddress(addr);
@@ -300,8 +329,13 @@ const SwapPage: Component = () => {
       setDestEditing(false);
       haptic("success");
       showToast("Destination wallet saved");
-    } catch (err: any) { showToast(err.message || "Failed"); haptic("error"); }
-    finally { setDestSaving(false); }
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Failed";
+      showToast(msg);
+      haptic("error");
+    } finally {
+      setDestSaving(false);
+    }
   }
 
   return (

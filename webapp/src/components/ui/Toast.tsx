@@ -1,5 +1,5 @@
 import { Show } from "solid-js";
-import { message, visible, hideToast } from "../stores/toast";
+import { message, visible, hideToast } from "../../stores/toast";
 import s from "./Toast.module.css";
 
 export default function Toast() {

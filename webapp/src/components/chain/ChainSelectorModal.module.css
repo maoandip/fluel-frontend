@@ -1,3 +1,11 @@
+/* Kobalte Dialog.Overlay — dim backdrop behind the dialog content. */
+.kobalteOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 99;
+  background: var(--c-bg);
+}
+
 .overlay {
   position: fixed;
   top: 0;

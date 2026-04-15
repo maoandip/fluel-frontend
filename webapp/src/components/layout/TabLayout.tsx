@@ -1,5 +1,5 @@
 import { createSignal, For, type JSX } from "solid-js";
-import { haptic } from "../telegram";
+import { haptic } from "../../lib/telegram";
 import s from "./TabLayout.module.css";
 
 export type TabId = "swap" | "balance" | "history" | "automate" | "earn";

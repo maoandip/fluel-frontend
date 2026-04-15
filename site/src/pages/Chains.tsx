@@ -1,8 +1,9 @@
-import { onMount, createSignal, createMemo, For, Show } from "solid-js";
-import { apiUrl } from "../lib/api";
+import { createSignal, createMemo, For, Show } from "solid-js";
+import { createAsync } from "@solidjs/router";
 import p from "../styles/page.module.css";
 import s from "./Chains.module.css";
 import CtaButton from "../components/CtaButton";
+import { getPrices } from "../lib/queries";
 
 interface ChainInfo {
   id: number;
@@ -25,7 +26,10 @@ function fmtGwei(g: number): string {
   if (leadingZeros === 0) return `0.${significant}`;
 
   const subscriptDigits = "\u2080\u2081\u2082\u2083\u2084\u2085\u2086\u2087\u2088\u2089";
-  const subscript = String(leadingZeros).split("").map((d) => subscriptDigits[parseInt(d)]).join("");
+  const subscript = String(leadingZeros)
+    .split("")
+    .map((d) => subscriptDigits[parseInt(d)])
+    .join("");
   return `0.0${subscript}${significant}`;
 }
 
@@ -39,8 +43,32 @@ const cardLevelClass = { low: "cardLow", mid: "cardMid", high: "cardHigh" } as c
 const gweiLevelClass = { low: "gweiLow", mid: "gweiMid", high: "gweiHigh" } as const;
 
 export default function Chains() {
-  const [chains, setChains] = createSignal<ChainInfo[]>([]);
-  const [loaded, setLoaded] = createSignal(false);
+  document.title = "Supported Chains — fluel";
+  const meta = document.querySelector('meta[name="description"]');
+  if (meta) {
+    meta.setAttribute(
+      "content",
+      "Browse all EVM chains supported by Fluel. Live gas prices, native tokens, and real-time network status for 40+ blockchains.",
+    );
+  }
+
+  // createAsync feeds through the outer <Suspense>/<ErrorBoundary> at the
+  // route level, so no manual loading/error state is needed in this file.
+  const prices = createAsync(() => getPrices());
+
+  const chains = createMemo<ChainInfo[]>(() => {
+    const data = prices();
+    if (!data) return [];
+    return data.chains
+      .map((c) => ({
+        id: c.id,
+        name: c.name,
+        icon: c.icon,
+        gwei: data.prices[c.id] ?? null,
+      }))
+      .sort((a, b) => a.name.localeCompare(b.name));
+  });
+
   const [search, setSearch] = createSignal("");
   const [sortBy, setSortBy] = createSignal<"name" | "gas">("name");
 
@@ -56,31 +84,12 @@ export default function Chains() {
     return list;
   });
 
-  onMount(async () => {
-    document.title = "Supported Chains — fluel";
-    const meta = document.querySelector('meta[name="description"]');
-    if (meta) meta.setAttribute("content", "Browse all EVM chains supported by Fluel. Live gas prices, native tokens, and real-time network status for 40+ blockchains.");
-    try {
-      const res = await fetch(apiUrl("/prices"));
-      const { prices, chains: chainList } = await res.json();
-      const list: ChainInfo[] = chainList.map((c: any) => ({
-        id: c.id,
-        name: c.name,
-        icon: c.icon,
-        gwei: prices[c.id] ?? null,
-      }));
-      list.sort((a, b) => a.name.localeCompare(b.name));
-      setChains(list);
-    } catch { /* prices unavailable */ }
-    setLoaded(true);
-  });
-
   return (
     <div class={p.page}>
       <div class={s.hero}>
         <h1 class={p.title}>Supported Chains</h1>
         <p class={s.subtitle}>
-          Fluel supports {chains().length || "40+"}  EVM chains. Swap USDC for native gas tokens on any of them — directly from Telegram.
+          Fluel supports {chains().length || "40+"} EVM chains. Swap USDC for native gas tokens on any of them — directly from Telegram.
           This list updates automatically as new chains are added.
         </p>
       </div>
@@ -96,11 +105,11 @@ export default function Chains() {
               value={search()}
               onInput={(e) => setSearch(e.currentTarget.value)}
             />
-            {search() && (
+            <Show when={search()}>
               <button class={s.clearBtn} onClick={() => setSearch("")} aria-label="Clear search">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
               </button>
-            )}
+            </Show>
           </div>
           <div class={s.sortGroup}>
             <button
@@ -115,56 +124,52 @@ export default function Chains() {
         </div>
 
         {/* Chain count */}
-        <Show when={loaded()}>
-          <p class={s.count}>
-            {filtered().length === chains().length
-              ? `${chains().length} chains supported`
-              : `${filtered().length} of ${chains().length} chains`}
-          </p>
-        </Show>
+        <p class={s.count}>
+          {filtered().length === chains().length
+            ? `${chains().length} chains supported`
+            : `${filtered().length} of ${chains().length} chains`}
+        </p>
 
         {/* Grid */}
-        <Show when={loaded()} fallback={<p class={s.loading}>Loading chains...</p>}>
-          <Show when={chains().length > 0} fallback={<p class={s.loading}>Chain data unavailable</p>}>
-            <Show when={filtered().length > 0} fallback={
-              <p class={s.loading}>No chains match "{search()}"</p>
-            }>
-              <div class={s.grid}>
-                <For each={filtered()}>
-                  {(chain) => {
-                    const hasGas = chain.gwei != null;
-                    const level = hasGas ? gweiLevel(chain.gwei!) : null;
-                    return (
-                      <div class={`${s.card} ${level ? s[cardLevelClass[level]] : ""}`}>
-                        <div class={s.cardTop}>
-                          <Show when={chain.icon}>
-                            <img class={s.chainIcon} src={chain.icon!} alt="" loading="lazy" />
-                          </Show>
-                          <div class={s.chainInfo}>
-                            <span class={s.chainName}>{chain.name}</span>
-                            <span class={s.chainId}>Chain ID: {chain.id}</span>
-                          </div>
+        <Show when={chains().length > 0} fallback={<p class={s.loading}>Chain data unavailable</p>}>
+          <Show when={filtered().length > 0} fallback={
+            <p class={s.loading}>No chains match "{search()}"</p>
+          }>
+            <div class={s.grid}>
+              <For each={filtered()}>
+                {(chain) => {
+                  const hasGas = chain.gwei != null;
+                  const level = hasGas ? gweiLevel(chain.gwei!) : null;
+                  return (
+                    <div class={`${s.card} ${level ? s[cardLevelClass[level]] : ""}`}>
+                      <div class={s.cardTop}>
+                        <Show when={chain.icon}>
+                          <img class={s.chainIcon} src={chain.icon!} alt="" loading="lazy" />
+                        </Show>
+                        <div class={s.chainInfo}>
+                          <span class={s.chainName}>{chain.name}</span>
+                          <span class={s.chainId}>Chain ID: {chain.id}</span>
                         </div>
-                        <Show when={hasGas && level}>
-                          <div class={s.cardBottom}>
-                            <div class={`${s.gweiVal} ${s[gweiLevelClass[level!]]}`}>
-                              {fmtGwei(chain.gwei!)}
-                              <span class={s.gweiUnit}> gwei</span>
-                            </div>
-                            <span class={`${s.levelBadge} ${s[level!]}`}>{level}</span>
-                          </div>
-                        </Show>
-                        <Show when={!hasGas}>
-                          <div class={s.cardBottom}>
-                            <span class={s.noPrice}>Price unavailable</span>
-                          </div>
-                        </Show>
                       </div>
-                    );
-                  }}
-                </For>
-              </div>
-            </Show>
+                      <Show when={hasGas && level}>
+                        <div class={s.cardBottom}>
+                          <div class={`${s.gweiVal} ${s[gweiLevelClass[level!]]}`}>
+                            {fmtGwei(chain.gwei!)}
+                            <span class={s.gweiUnit}> gwei</span>
+                          </div>
+                          <span class={`${s.levelBadge} ${s[level!]}`}>{level}</span>
+                        </div>
+                      </Show>
+                      <Show when={!hasGas}>
+                        <div class={s.cardBottom}>
+                          <span class={s.noPrice}>Price unavailable</span>
+                        </div>
+                      </Show>
+                    </div>
+                  );
+                }}
+              </For>
+            </div>
           </Show>
         </Show>
 

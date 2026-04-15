@@ -1,9 +1,6 @@
-import { tg } from "./telegram";
+import * as v from "valibot";
+import { tg } from "./lib/telegram";
 import type {
-  Chain,
-  BalancesByChain,
-  QuoteResponse,
-  ConfirmResponse,
   Transaction,
   GasAlert,
   AutoRefill,
@@ -11,13 +8,28 @@ import type {
   ReferralStats,
   Gift,
 } from "./types";
+import {
+  SessionResponseSchema,
+  ChainsResponseSchema,
+  BalancesResponseSchema,
+  QuoteResponseSchema,
+  SwapStatusSchema,
+  ConfirmResponseSchema,
+} from "./lib/schemas";
 
 // ── Fetch wrapper ──────────────────────────────────────────────────
 
 import { env } from "./config/env";
 const API_BASE = env.VITE_API_BASE;
 
-async function api<T>(path: string, options: RequestInit = {}): Promise<T> {
+// Optional response schema — if provided, the JSON body is validated at the
+// seam and a shape mismatch throws a developer-friendly error (with the
+// offending issues logged to the console for observability).
+async function api<T>(
+  path: string,
+  options: RequestInit = {},
+  schema?: v.GenericSchema<T>,
+): Promise<T> {
   const headers: Record<string, string> = {
     "X-Telegram-Init-Data": tg.initData,
     ...((options.headers as Record<string, string>) ?? {}),
@@ -34,13 +46,30 @@ async function api<T>(path: string, options: RequestInit = {}): Promise<T> {
     throw new Error(body.error ?? `HTTP ${res.status}`);
   }
 
-  return res.json() as Promise<T>;
+  const data = await res.json();
+
+  if (schema) {
+    try {
+      return v.parse(schema, data);
+    } catch (err) {
+      if (v.isValiError(err)) {
+        const issues = err.issues
+          .map((i) => `${i.path?.map((p) => p.key).join(".") ?? "<root>"}: ${i.message}`)
+          .join("; ");
+        console.error(`[api] ${path} response shape mismatch:`, err.issues);
+        throw new Error(`Server returned unexpected data for ${path}: ${issues}`);
+      }
+      throw err;
+    }
+  }
+
+  return data as T;
 }
 
 // ── Session ────────────────────────────────────────────────────────
 
 export function getSession() {
-  return api<{ walletAddress: string; destinationAddress: string | null; hasQuote: boolean; lastTxHash?: string }>("/api/session");
+  return api("/api/session", {}, SessionResponseSchema);
 }
 
 export function setDestination(address: string) {
@@ -53,41 +82,41 @@ export function setDestination(address: string) {
 // ── Chains ─────────────────────────────────────────────────────────
 
 export function getChains() {
-  return api<{ chains: Chain[]; receiveChains: Chain[]; count: number }>("/api/chains");
+  return api("/api/chains", {}, ChainsResponseSchema);
 }
 
 // ── Balances ───────────────────────────────────────────────────────
 
 export function getBalances() {
-  return api<{ balances: BalancesByChain }>("/api/balances");
+  return api("/api/balances", {}, BalancesResponseSchema);
 }
 
 // ── Quote ──────────────────────────────────────────────────────────
 
 export function postQuote(amount: string, fromChain: string, toChain: string, signal?: AbortSignal) {
-  return api<QuoteResponse>("/api/quote", {
-    method: "POST",
-    body: JSON.stringify({ amount, fromChain, toChain }),
-    signal,
-  });
+  return api(
+    "/api/quote",
+    {
+      method: "POST",
+      body: JSON.stringify({ amount, fromChain, toChain }),
+      signal,
+    },
+    QuoteResponseSchema,
+  );
 }
 
 // ── Confirm ────────────────────────────────────────────────────────
 
 export function postConfirm() {
-  return api<ConfirmResponse>("/api/confirm", { method: "POST" });
+  return api("/api/confirm", { method: "POST" }, ConfirmResponseSchema);
 }
 
 // ── Swap status ───────────────────────────────────────────────────
 
-export interface SwapStatus {
-  status: string;
-  substatus: string;
-  message: string;
-}
+export type SwapStatus = v.InferOutput<typeof SwapStatusSchema>;
 
 export function getSwapStatus(txHash: string) {
-  return api<SwapStatus>(`/api/status?txHash=${encodeURIComponent(txHash)}`);
+  return api(`/api/status?txHash=${encodeURIComponent(txHash)}`, {}, SwapStatusSchema);
 }
 
 // ── History ────────────────────────────────────────────────────────

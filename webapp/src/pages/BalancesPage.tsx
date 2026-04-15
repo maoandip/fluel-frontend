@@ -1,13 +1,14 @@
-import { Component, Show, For, onMount, createMemo, createSignal } from "solid-js";
+import { Component, Show, For, Suspense, ErrorBoundary, createMemo, createSignal } from "solid-js";
+import { createAsync } from "@solidjs/router";
 import { useApp } from "../stores/app";
-import { balances, refetchBalances } from "../stores/balances";
+import { balancesQuery, refetchBalances } from "../stores/balances";
 import { postWithdraw } from "../api";
 import { showToast } from "../stores/toast";
-import { haptic } from "../telegram";
-import Skeleton from "../components/Skeleton";
-import EmptyState from "../components/EmptyState";
-import WalletBar from "../components/WalletBar";
-import TokenChainIcon from "../components/TokenChainIcon";
+import { haptic } from "../lib/telegram";
+import Skeleton from "../components/ui/Skeleton";
+import EmptyState from "../components/ui/EmptyState";
+import WalletBar from "../components/layout/WalletBar";
+import TokenChainIcon from "../components/chain/TokenChainIcon";
 import { NATIVE_TOKEN, type TokenBalance } from "../types";
 import s from "./BalancesPage.module.css";
 
@@ -24,13 +25,13 @@ interface DisplayRow {
 
 const BalancesPage: Component = () => {
   const { chains, destinationAddress } = useApp();
-  onMount(() => { refetchBalances(); });
-  const getChain = (chainId: number) => chains().find(c => c.id === chainId);
+  const balances = createAsync(() => balancesQuery());
+  const getChain = (chainId: number) => chains().find((c) => c.id === chainId);
 
   const [withdrawing, setWithdrawing] = createSignal(false);
 
   const rows = createMemo((): DisplayRow[] => {
-    const data = balances();
+    const data = balances()?.balances;
     if (!data) return [];
     const result: DisplayRow[] = [];
     for (const [chainId, tokens] of Object.entries(data)) {
@@ -93,21 +94,15 @@ const BalancesPage: Component = () => {
     <div class="page">
       <div class={s.walletRow}><WalletBar /></div>
 
-      {/* Loading */}
-      <Show when={balances.loading}>
-        <div class={s.card}><Skeleton rows={4} /></div>
-      </Show>
-
-      {/* Error */}
-      <Show when={!balances.loading && balances.error}>
+      <ErrorBoundary fallback={(_err, reset) => (
         <div class="error-state">
           <span class="error-state-msg">Failed to load balances</span>
-          <button class="retry-btn" onClick={() => refetchBalances()}>Retry</button>
+          <button class="retry-btn" onClick={() => { refetchBalances(); reset(); }}>Retry</button>
         </div>
-      </Show>
-
+      )}>
+        <Suspense fallback={<div class={s.card}><Skeleton rows={4} /></div>}>
       {/* Empty */}
-      <Show when={!balances.loading && !balances.error && rows().length === 0}>
+      <Show when={rows().length === 0}>
         <EmptyState
           icon={<span>&#128176;</span>}
           message="No balances yet"
@@ -116,7 +111,7 @@ const BalancesPage: Component = () => {
       </Show>
 
       {/* Balances */}
-      <Show when={!balances.loading && !balances.error && rows().length > 0}>
+      <Show when={rows().length > 0}>
         <div class={s.card}>
           <For each={rows()}>
             {(row) => {
@@ -172,6 +167,8 @@ const BalancesPage: Component = () => {
           </div>
         </Show>
       </Show>
+        </Suspense>
+      </ErrorBoundary>
     </div>
   );
 };

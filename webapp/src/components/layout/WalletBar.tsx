@@ -1,6 +1,6 @@
-import { useApp } from "../stores/app";
-import { haptic } from "../telegram";
-import { showToast } from "../stores/toast";
+import { useApp } from "../../stores/app";
+import { haptic } from "../../lib/telegram";
+import { showToast } from "../../stores/toast";
 import s from "./WalletBar.module.css";
 
 function truncateAddress(addr: string): string {

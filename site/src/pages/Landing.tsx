@@ -1,8 +1,9 @@
-import { onMount, createSignal, For, Show } from "solid-js";
-import { apiUrl } from "../lib/api";
+import { onMount, createSignal, createMemo, For, Show } from "solid-js";
+import { createAsync } from "@solidjs/router";
 import s from "./Landing.module.css";
 import CtaButton from "../components/CtaButton";
 import { BETA_MODE } from "../config/flags";
+import { getPrices } from "../lib/queries";
 
 const TOP_CHAINS = 10;
 
@@ -42,13 +43,29 @@ const cardLevelClass = { low: "cardLow", mid: "cardMid", high: "cardHigh" } as c
 const gweiLevelClass = { low: "gweiLow", mid: "gweiMid", high: "gweiHigh" } as const;
 
 export default function Landing() {
-  const [allPrices, setAllPrices] = createSignal<ChainPrice[]>([]);
+  document.title = "fluel — Never get stranded on a chain again";
+
+  const prices = createAsync(() => getPrices());
+
+  const allPrices = createMemo<ChainPrice[]>(() => {
+    const data = prices();
+    if (!data) return [];
+    return data.chains
+      .filter((c) => data.prices[c.id] != null)
+      .map((c) => ({
+        id: c.id,
+        name: c.name,
+        icon: c.icon,
+        gwei: data.prices[c.id],
+      }))
+      .sort((a, b) => a.gwei! - b.gwei!);
+  });
+
   const [showAll, setShowAll] = createSignal(false);
-  const [loaded, setLoaded] = createSignal(false);
 
   const displayPrices = () => {
-    const prices = allPrices();
-    return showAll() ? prices : prices.slice(0, TOP_CHAINS);
+    const list = allPrices();
+    return showAll() ? list : list.slice(0, TOP_CHAINS);
   };
 
   // Scroll reveal
@@ -56,29 +73,14 @@ export default function Landing() {
     const els = document.querySelectorAll(`.${s.reveal}`);
     if (!els.length) return;
     const obs = new IntersectionObserver((entries) => {
-      entries.forEach(e => {
+      entries.forEach((e) => {
         if (e.isIntersecting) { e.target.classList.add(s.visible); obs.unobserve(e.target); }
       });
     }, { threshold: 0.1, rootMargin: "0px 0px -40px 0px" });
-    els.forEach(el => obs.observe(el));
+    els.forEach((el) => obs.observe(el));
   }
 
-  onMount(async () => {
-    document.title = "fluel — Never get stranded on a chain again";
-    try {
-      const res = await fetch(apiUrl("/prices"));
-      const { prices, chains } = await res.json();
-      const list: ChainPrice[] = chains
-        .filter((c: any) => prices[c.id] != null)
-        .map((c: any) => ({
-          id: c.id, name: c.name, icon: c.icon,
-          gwei: prices[c.id],
-        }));
-      list.sort((a, b) => a.gwei! - b.gwei!);
-      setAllPrices(list);
-      setLoaded(true);
-    } catch { setLoaded(true); }
-
+  onMount(() => {
     // Delay reveal setup to let DOM render
     requestAnimationFrame(setupReveal);
   });
@@ -137,8 +139,7 @@ export default function Landing() {
               </button>
             </Show>
           </div>
-          <Show when={loaded()} fallback={<p class={s.loading}>Loading prices...</p>}>
-            <Show when={allPrices().length > 0} fallback={<p class={s.loading}>Prices unavailable</p>}>
+          <Show when={allPrices().length > 0} fallback={<p class={s.loading}>Prices unavailable</p>}>
               <div class={s.pricesGrid}>
                 <For each={displayPrices()}>
                   {(chain) => {
@@ -162,7 +163,6 @@ export default function Landing() {
                 </For>
               </div>
             </Show>
-          </Show>
         </div>
       </section>
 

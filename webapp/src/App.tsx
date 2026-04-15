@@ -1,12 +1,13 @@
-import { Component, Show, Match, Switch, Suspense, createSignal, onMount, lazy } from "solid-js";
+import { Component, Show, Match, Switch, Suspense, ErrorBoundary, createSignal, createEffect, lazy } from "solid-js";
 import { AppProvider, useApp } from "./stores/app";
-import Toast from "./components/Toast";
-import TabLayout from "./components/TabLayout";
-import Skeleton from "./components/Skeleton";
+import Toast from "./components/ui/Toast";
+import TabLayout from "./components/layout/TabLayout";
+import Skeleton from "./components/ui/Skeleton";
 import SwapPage from "./pages/SwapPage";
-import BetaGate from "./components/BetaGate";
+import BetaGate from "./components/layout/BetaGate";
+import RouteErrorFallback from "./components/layout/RouteErrorFallback";
 import { BETA_MODE, isTester, markTester } from "./config/flags";
-import splash from "./components/Splash.module.css";
+import splash from "./components/layout/Splash.module.css";
 
 // Persist tester access via ?tester=1 URL param (checked once at module load).
 if (typeof window !== "undefined") {
@@ -41,14 +42,13 @@ const AppContent: Component = () => {
   const [showSplash, setShowSplash] = createSignal(true);
   const [fadeOut, setFadeOut] = createSignal(false);
 
-  onMount(() => {
-    const check = setInterval(() => {
-      if (isReady()) {
-        setFadeOut(true);
-        setTimeout(() => setShowSplash(false), 400);
-        clearInterval(check);
-      }
-    }, 50);
+  // Flip splash out as soon as the AppProvider's resources resolve.
+  // Reactive on isReady() — no manual polling.
+  createEffect(() => {
+    if (isReady() && !fadeOut()) {
+      setFadeOut(true);
+      setTimeout(() => setShowSplash(false), 400);
+    }
   });
 
   return (
@@ -59,15 +59,17 @@ const AppContent: Component = () => {
       <Show when={isReady()}>
         <TabLayout>
           {(tab) => (
-            <Suspense fallback={<div class={splash.suspense}><Skeleton rows={5} /></div>}>
-              <Switch>
-                <Match when={tab() === "swap"}><SwapPage /></Match>
-                <Match when={tab() === "balance"}><BalancesPage /></Match>
-                <Match when={tab() === "history"}><HistoryPage /></Match>
-                <Match when={tab() === "automate"}><AutomatePage /></Match>
-                <Match when={tab() === "earn"}><EarnPage /></Match>
-              </Switch>
-            </Suspense>
+            <ErrorBoundary fallback={(err, reset) => <RouteErrorFallback err={err} reset={reset} />}>
+              <Suspense fallback={<div class={splash.suspense}><Skeleton rows={5} /></div>}>
+                <Switch>
+                  <Match when={tab() === "swap"}><SwapPage /></Match>
+                  <Match when={tab() === "balance"}><BalancesPage /></Match>
+                  <Match when={tab() === "history"}><HistoryPage /></Match>
+                  <Match when={tab() === "automate"}><AutomatePage /></Match>
+                  <Match when={tab() === "earn"}><EarnPage /></Match>
+                </Switch>
+              </Suspense>
+            </ErrorBoundary>
           )}
         </TabLayout>
       </Show>

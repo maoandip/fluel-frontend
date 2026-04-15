@@ -1,11 +1,13 @@
 import {
   createContext,
   createSignal,
+  createEffect,
   useContext,
-  onMount,
   type JSX,
 } from "solid-js";
-import { getSession, getChains, setDestination as apiSetDestination } from "../api";
+import { createAsync, revalidate } from "@solidjs/router";
+import { setDestination as apiSetDestination } from "../api";
+import { queries } from "../lib/queries";
 import type { Chain } from "../types";
 
 interface AppContextValue {
@@ -13,6 +15,7 @@ interface AppContextValue {
   destinationAddress: () => string;
   chains: () => Chain[];
   receiveChains: () => Chain[];
+  /** True once both session and chains queries have resolved. */
   isReady: () => boolean;
   setDestinationAddress: (address: string) => Promise<void>;
 }
@@ -20,48 +23,40 @@ interface AppContextValue {
 const AppContext = createContext<AppContextValue>();
 
 export function AppProvider(props: { children: JSX.Element }) {
-  const [walletAddress, setWalletAddress] = createSignal("");
-  const [destinationAddress, setDestinationAddress] = createSignal("");
-  const [chains, setChains] = createSignal<Chain[]>([]);
-  const [receiveChains, setReceiveChains] = createSignal<Chain[]>([]);
-  const [isReady, setIsReady] = createSignal(false);
+  // Initial load — createAsync feeds through Solid Router's cache so the
+  // session/chains fetches run once per mount and integrate with Suspense.
+  const session = createAsync(() => queries.session());
+  const chainsData = createAsync(() => queries.chains());
 
-  onMount(async () => {
-    try {
-      const [session, chainsRes] = await Promise.all([
-        getSession(),
-        getChains(),
-      ]);
-      setWalletAddress(session.walletAddress);
-      setDestinationAddress(session.destinationAddress ?? "");
-      setChains(chainsRes.chains);
-      setReceiveChains(chainsRes.receiveChains);
-    } catch (err) {
-      console.error("Failed to initialize app:", err);
-    } finally {
-      setIsReady(true);
+  // destinationAddress is mutable after initial load; seed it from the
+  // session query result on first arrival.
+  const [destinationAddress, setDestinationAddressSignal] = createSignal("");
+
+  createEffect(() => {
+    const s = session();
+    if (s && !destinationAddress()) {
+      setDestinationAddressSignal(s.destinationAddress ?? "");
     }
   });
 
   async function updateDestination(address: string) {
     const res = await apiSetDestination(address);
-    setDestinationAddress(res.destinationAddress);
+    setDestinationAddressSignal(res.destinationAddress);
+    // Session contains the destinationAddress — mark it stale so anything
+    // reading through the session query gets the fresh value on next read.
+    revalidate("session");
   }
 
   const value: AppContextValue = {
-    walletAddress,
+    walletAddress: () => session()?.walletAddress ?? "",
     destinationAddress,
-    chains,
-    receiveChains,
-    isReady,
+    chains: () => chainsData()?.chains ?? [],
+    receiveChains: () => chainsData()?.receiveChains ?? [],
+    isReady: () => session() !== undefined && chainsData() !== undefined,
     setDestinationAddress: updateDestination,
   };
 
-  return (
-    <AppContext.Provider value={value}>
-      {props.children}
-    </AppContext.Provider>
-  );
+  return <AppContext.Provider value={value}>{props.children}</AppContext.Provider>;
 }
 
 export function useApp(): AppContextValue {
