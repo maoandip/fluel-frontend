@@ -62,7 +62,7 @@ export const guides: Guide[] = [
       },
       {
         heading: "Step by step",
-        body: "1. Open @FluelBot on Telegram.\n2. Type /start to create your wallet.\n3. Set your destination: /setwallet 0xYourStuckWallet\n4. Deposit USDC to your Fluel address (from any chain where you DO have gas).\n5. Type /gas 2 base (or whatever chain you're stuck on).\n6. Confirm. Gas arrives in seconds."
+        body: "1. Open @fluelbot on Telegram.\n2. Type /start to create your wallet.\n3. Set your destination: /setwallet 0xYourStuckWallet\n4. Deposit USDC to your Fluel address (from any chain where you DO have gas).\n5. Type /gas 2 base (or whatever chain you're stuck on).\n6. Confirm. Gas arrives in seconds."
       },
       {
         heading: "Pro tip",
@@ -118,7 +118,7 @@ export const guides: Guide[] = [
       },
       {
         heading: "Getting ETH on Base with fluel",
-        body: "1. Open @FluelBot on Telegram.\n2. Deposit USDC to your Fluel wallet (from any chain).\n3. Type /gas 2 arbitrum base\n4. Confirm. ETH arrives on Base in seconds.\n\nYou can swap from USDC on any chain — Arbitrum, Polygon, Ethereum, BSC — and receive ETH on Base. fluel uses Li.Fi to find the cheapest route automatically."
+        body: "1. Open @fluelbot on Telegram.\n2. Deposit USDC to your Fluel wallet (from any chain).\n3. Type /gas 2 arbitrum base\n4. Confirm. ETH arrives on Base in seconds.\n\nYou can swap from USDC on any chain — Arbitrum, Polygon, Ethereum, BSC — and receive ETH on Base. fluel uses Li.Fi to find the cheapest route automatically."
       },
       {
         heading: "How much gas do you need on Base?",
