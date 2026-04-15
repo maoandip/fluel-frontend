@@ -4,13 +4,16 @@
   "version": "1.0.0",
   "description": "Public frontend for fluel — marketing site and Telegram Mini App",
   "scripts": {
-    "install:all": "cd site && npm install && cd ../webapp && npm install",
-    "dev:site": "cd site && npm run dev",
-    "dev:webapp": "cd webapp && npm run dev",
+    "install:all": "npm install && npm --prefix site install && npm --prefix webapp install && npm --prefix brand install",
+    "dev:site": "npm --prefix site run dev",
+    "dev:webapp": "npm --prefix webapp run dev",
     "build": "npm run build:site && npm run build:webapp",
-    "build:site": "cd site && npm run build",
-    "build:webapp": "cd webapp && npm run build",
-    "typecheck": "cd site && npx tsc --noEmit && cd ../webapp && npx tsc --noEmit"
+    "build:site": "npm --prefix site run build",
+    "build:webapp": "npm --prefix webapp run build",
+    "typecheck": "npm --prefix site run typecheck && npm --prefix webapp run typecheck",
+    "lint": "npm --prefix site run lint && npm --prefix webapp run lint",
+    "test": "npm --prefix site test && npm --prefix webapp test",
+    "check": "npm run lint && npm run typecheck && npm run test && npm run build"
   },
   "license": "MIT",
   "devDependencies": {

@@ -18,8 +18,6 @@ export interface TokenBalance {
   priceUSD: string;
 }
 
-export type BalancesByChain = Record<string, TokenBalance[]>;
-
 export interface QuoteResponse {
   toAmount: string;
   toAmountMin: string;
@@ -30,22 +28,6 @@ export interface QuoteResponse {
   executionDuration: number;
   tool: string;
   toolIcon: string | null;
-}
-
-export interface ConfirmResponse {
-  txHash: string;
-}
-
-export interface Transaction {
-  type: string;
-  fromAmount: string;
-  toAmount: string;
-  toToken: string;
-  fromChain: string;
-  toChain: string;
-  txHash: string;
-  status: string;
-  createdAt: string;
 }
 
 export interface GasAlert {

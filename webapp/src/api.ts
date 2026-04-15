@@ -1,7 +1,6 @@
 import * as v from "valibot";
 import { tg } from "./lib/telegram";
 import type {
-  Transaction,
   GasAlert,
   AutoRefill,
   GasPriceData,
@@ -119,11 +118,6 @@ export function getSwapStatus(txHash: string) {
   return api(`/api/status?txHash=${encodeURIComponent(txHash)}`, {}, SwapStatusSchema);
 }
 
-// ── History ────────────────────────────────────────────────────────
-
-export function getHistory() {
-  return api<{ history: Transaction[] }>("/api/history");
-}
 
 export interface LifiToken {
   address: string;
