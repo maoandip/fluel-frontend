@@ -5,6 +5,7 @@ import CtaButton from "../components/CtaButton";
 import AsyncSection from "../components/AsyncSection";
 import { BETA_MODE } from "../config/flags";
 import { getPrices } from "../lib/queries";
+import { useCanonical } from "../lib/seo";
 
 const TOP_CHAINS = 10;
 
@@ -107,6 +108,7 @@ function LivePrices() {
 
 export default function Landing() {
   document.title = "fluel — Never get stranded on a chain again";
+  useCanonical("/");
 
   // Scroll reveal
   function setupReveal() {

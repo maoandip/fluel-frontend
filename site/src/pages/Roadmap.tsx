@@ -1,6 +1,7 @@
 import { For } from "solid-js";
 import p from "../styles/page.module.css";
 import s from "./Roadmap.module.css";
+import { useCanonical } from "../lib/seo";
 
 interface Phase {
   label: string;
@@ -82,6 +83,7 @@ const statusLabel: Record<string, string> = {
 
 export default function Roadmap() {
   document.title = "Roadmap — fluel";
+  useCanonical("/roadmap");
 
   return (
     <div class={p.page}>

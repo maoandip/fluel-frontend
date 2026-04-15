@@ -1,7 +1,9 @@
 import LegalPage, { Section } from "../components/LegalPage";
+import { useCanonical } from "../lib/seo";
 
 export default function Privacy() {
   document.title = "Privacy Policy — fluel";
+  useCanonical("/privacy");
   return (
     <LegalPage title="Privacy Policy" updated="April 2026">
       <Section title="1. Data Controller">

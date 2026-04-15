@@ -23,7 +23,7 @@ export default function CtaButton(props: Props) {
         {props.botLabel ?? "Get gas now"}
       </a>
     }>
-      <A href="/feedback" class={props.class} onClick={props.onClick}>
+      <A href="/waitlist" class={props.class} onClick={props.onClick}>
         {props.waitlistLabel ?? "Join waitlist"}
       </A>
     </Show>

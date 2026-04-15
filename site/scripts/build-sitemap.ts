@@ -13,6 +13,11 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const SITE_ROOT = resolve(__dirname, "..");
 const ORIGIN = "https://fluel.io";
 
+// Mirror the same logic as src/config/env.ts. We can't import from there
+// because that file uses import.meta.env (Vite). At build time we read
+// process.env directly.
+const BETA_MODE = process.env.VITE_BETA !== "false";
+
 interface Route {
   path: string;
   source: string | string[];
@@ -26,7 +31,10 @@ const STATIC_ROUTES: Route[] = [
   { path: "/how-it-works", source: "src/pages/HowItWorks.tsx",       changefreq: "monthly", priority: "0.8" },
   { path: "/roadmap",      source: "src/pages/Roadmap.tsx",          changefreq: "monthly", priority: "0.7" },
   { path: "/guides",       source: "src/pages/guides/GuideList.tsx", changefreq: "weekly",  priority: "0.9" },
-  { path: "/feedback",     source: "src/pages/Feedback.tsx",         changefreq: "monthly", priority: "0.5" },
+  // During beta, /waitlist is the canonical alias of /feedback.
+  ...(BETA_MODE
+    ? [{ path: "/waitlist", source: "src/pages/Feedback.tsx", changefreq: "weekly", priority: "0.7" } as Route]
+    : [{ path: "/feedback", source: "src/pages/Feedback.tsx", changefreq: "monthly", priority: "0.5" } as Route]),
   { path: "/terms",        source: "src/pages/Terms.tsx",            changefreq: "yearly",  priority: "0.3" },
   { path: "/privacy",      source: "src/pages/Privacy.tsx",          changefreq: "yearly",  priority: "0.3" },
 ];

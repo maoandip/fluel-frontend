@@ -4,6 +4,7 @@ import { guides, type Guide } from "./data";
 import p from "../../styles/page.module.css";
 import s from "./Guides.module.css";
 import CtaButton from "../../components/CtaButton";
+import { setCanonical } from "../../lib/seo";
 
 const SITE = "https://fluel.io";
 const OG_IMAGE = `${SITE}/og.png`;
@@ -65,6 +66,7 @@ export default function GuidePage() {
 
     document.title = `${g.title} — fluel`;
     metaEl?.setAttribute("content", g.description);
+    const restoreCanonical = setCanonical(`/guides/${g.slug}`);
 
     const breadcrumbScript = injectSchema("guide-breadcrumb-schema", buildBreadcrumb(g));
     const articleScript = injectSchema("guide-article-schema", buildArticle(g));
@@ -72,6 +74,7 @@ export default function GuidePage() {
     onCleanup(() => {
       breadcrumbScript.remove();
       articleScript.remove();
+      restoreCanonical();
       if (originalDesc !== null) metaEl?.setAttribute("content", originalDesc);
     });
   });

@@ -3,6 +3,7 @@ import p from "../styles/page.module.css";
 import s from "./HowItWorks.module.css";
 import { GITHUB_URL } from "../config/links";
 import CtaButton from "../components/CtaButton";
+import { useCanonical } from "../lib/seo";
 
 const FAQ_SCHEMA = {
   "@context": "https://schema.org",
@@ -61,6 +62,7 @@ const FAQ_SCHEMA = {
 
 export default function HowItWorks() {
   document.title = "How it works — fluel";
+  useCanonical("/how-it-works");
 
   onMount(() => {
     const script = document.createElement("script");

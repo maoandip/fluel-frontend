@@ -4,8 +4,11 @@ import s from "./Layout.module.css";
 import { BOT_URL, X_URL, TG_CHANNEL_URL, GITHUB_URL } from "../config/links";
 import { BETA_MODE } from "../config/flags";
 
+const WAITLIST_PATH = "/waitlist"; // canonical during beta — see Feedback.tsx
+const FEEDBACK_PATH = "/feedback";
+
 const CTA_LABEL = BETA_MODE ? "Join waitlist" : "Get gas now";
-const CTA_HREF = BETA_MODE ? "/feedback" : BOT_URL;
+const CTA_HREF = BETA_MODE ? WAITLIST_PATH : BOT_URL;
 const CTA_EXTERNAL = !BETA_MODE;
 
 function Logo(props: { size?: number }) {
@@ -29,7 +32,7 @@ export default function Layout(props: { children?: JSX.Element }) {
         <div class={s.betaBanner}>
           <span class={s.betaDot} />
           Closed beta — public launch coming soon.
-          <A href="/feedback">Join the waitlist →</A>
+          <A href={WAITLIST_PATH}>Join the waitlist →</A>
         </div>
       </Show>
       <nav class={s.nav}>
@@ -57,7 +60,7 @@ export default function Layout(props: { children?: JSX.Element }) {
             <A href="/chains" class={s.mobileLink} onClick={closeMenu}>Chains</A>
             <A href="/roadmap" class={s.mobileLink} onClick={closeMenu}>Roadmap</A>
             <A href="/guides" class={s.mobileLink} onClick={closeMenu}>Guides</A>
-            <A href="/feedback" class={s.mobileLink} onClick={closeMenu}>{BETA_MODE ? "Waitlist" : "Feedback"}</A>
+            <A href={BETA_MODE ? WAITLIST_PATH : FEEDBACK_PATH} class={s.mobileLink} onClick={closeMenu}>{BETA_MODE ? "Waitlist" : "Feedback"}</A>
             <Show when={CTA_EXTERNAL} fallback={
               <A href={CTA_HREF} class={s.mobileCta} onClick={closeMenu}>{CTA_LABEL}</A>
             }>
@@ -84,7 +87,7 @@ export default function Layout(props: { children?: JSX.Element }) {
               <A href="/chains">Supported chains</A>
               <A href="/guides">Guides</A>
               <A href="/roadmap">Roadmap</A>
-              <A href="/feedback">Feedback</A>
+              <A href={BETA_MODE ? WAITLIST_PATH : FEEDBACK_PATH}>{BETA_MODE ? "Waitlist" : "Feedback"}</A>
             </div>
             <div class={s.footerCol}>
               <span class={s.footerColTitle}>Legal</span>

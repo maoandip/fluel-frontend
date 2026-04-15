@@ -1,10 +1,15 @@
 import { createSignal, Show, For } from "solid-js";
 import { apiUrl } from "../lib/api";
+import { useCanonical } from "../lib/seo";
 import p from "../styles/page.module.css";
 import s from "./Feedback.module.css";
 import { BETA_MODE } from "../config/flags";
 
 export default function Feedback() {
+  // During beta the page is canonical at /waitlist (URL token matches user
+  // intent for "fluel waitlist" queries). After launch it's /feedback.
+  useCanonical(BETA_MODE ? "/waitlist" : "/feedback");
+
   const [type, setType] = createSignal(BETA_MODE ? "waitlist" : "feedback");
   const [message, setMessage] = createSignal("");
   const [contact, setContact] = createSignal("");

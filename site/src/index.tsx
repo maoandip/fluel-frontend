@@ -51,6 +51,10 @@ render(
       <Route path="/terms" component={Terms} />
       <Route path="/privacy" component={Privacy} />
       <Route path="/feedback" component={Feedback} />
+      {/* /waitlist is a beta-period alias of /feedback. The same component
+         renders for both paths; Feedback.tsx sets the canonical based on
+         BETA_MODE so search engines see the right URL. */}
+      <Route path="/waitlist" component={Feedback} />
       <Route path="*" component={NotFound} />
     </Router>
   ),

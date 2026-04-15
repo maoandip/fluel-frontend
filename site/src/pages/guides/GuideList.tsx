@@ -3,6 +3,7 @@ import { A } from "@solidjs/router";
 import { guides } from "./data";
 import p from "../../styles/page.module.css";
 import s from "./Guides.module.css";
+import { useCanonical } from "../../lib/seo";
 
 const categoryLabel: Record<string, string> = {
   "getting-started": "Getting started",
@@ -13,6 +14,7 @@ const categoryLabel: Record<string, string> = {
 
 export default function GuideList() {
   document.title = "Guides — fluel";
+  useCanonical("/guides");
 
   const categories = () => {
     const cats = new Map<string, typeof guides>();

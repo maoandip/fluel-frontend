@@ -1,7 +1,9 @@
 import LegalPage, { Section } from "../components/LegalPage";
+import { useCanonical } from "../lib/seo";
 
 export default function Terms() {
   document.title = "Terms of Service — fluel";
+  useCanonical("/terms");
   return (
     <LegalPage title="Terms of Service" updated="April 2026">
       <Section title="1. About Us">

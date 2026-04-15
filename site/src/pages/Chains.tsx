@@ -5,6 +5,7 @@ import s from "./Chains.module.css";
 import CtaButton from "../components/CtaButton";
 import AsyncSection from "../components/AsyncSection";
 import { getPrices } from "../lib/queries";
+import { useCanonical } from "../lib/seo";
 
 interface ChainInfo {
   id: number;
@@ -127,6 +128,7 @@ function ChainGrid(props: { search: Accessor<string>; sortBy: Accessor<"name" | 
 
 export default function Chains() {
   document.title = "Supported Chains — fluel";
+  useCanonical("/chains");
   const meta = document.querySelector('meta[name="description"]');
   if (meta) {
     meta.setAttribute(
