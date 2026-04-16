@@ -336,6 +336,33 @@
   color: var(--c-dim);
 }
 
+.quoteRefreshBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  background: rgba(0, 255, 178, .06);
+  border: 1px solid var(--c-border);
+  border-radius: 4px;
+  color: var(--c-muted);
+  cursor: pointer;
+  transition: color .15s, border-color .15s, background .15s;
+  -webkit-tap-highlight-color: transparent;
+  padding: 0;
+}
+
+.quoteRefreshBtn:hover {
+  color: var(--c-accent);
+  border-color: rgba(0, 255, 178, .2);
+}
+
+.quoteRefreshBtn:active {
+  color: var(--c-accent);
+  background: rgba(0, 255, 178, .12);
+  border-color: rgba(0, 255, 178, .3);
+}
+
 .quoteRefreshSpinner {
   width: 14px;
   height: 14px;
