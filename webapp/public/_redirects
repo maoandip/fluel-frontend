@@ -1,6 +1,3 @@
-# Redirect *.pages.dev traffic to the custom domain
-https://fluel-webapp.pages.dev/* https://webapp.fluel.io/:splat 301
-
 # SPA fallback for the Telegram Mini App. All routes resolve to index.html
 # so client-side routing works (tab navigation, deep links from the bot).
 /*    /index.html   200
