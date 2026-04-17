@@ -426,7 +426,7 @@ const SwapPage: Component = () => {
               <span class={s.quoteRate}>{quoteDisplay().exchangeRate}</span>
               <div class={s.quoteFreshness}>
                 <button class={s.quoteRefreshBtn} onClick={() => { fetchQuote(); haptic("light"); }} title="Refresh quote">
-                  <svg width="14" height="14" viewBox="0 0 256 256" fill="currentColor"><path d="M224,48V96a8,8,0,0,1-8,8H168a8,8,0,0,1,0-16h28.69L163.31,54.63A80,80,0,0,0,48,128a8,8,0,0,1-16,0,96,96,0,0,1,163.88-67.88L232,96.69V48a8,8,0,0,1,16,0ZM208,120a8,8,0,0,0-8,8,80,80,0,0,1-136.62,56.62L96.69,152H68a8,8,0,0,1-8-8V96a8,8,0,0,1,16,0v28.69l33.37-33.38A96,96,0,0,0,224,128,8,8,0,0,0,208,120Z"/></svg>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/></svg>
                 </button>
                 <Show when={quoteDisplay().freshSeconds > 5} fallback={
                   <div class={s.quoteRefreshSpinner} />
