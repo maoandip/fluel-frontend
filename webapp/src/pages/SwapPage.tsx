@@ -1,10 +1,10 @@
 import { Component, Show, createSignal, createMemo, createEffect, onCleanup } from "solid-js";
-import { createAsync } from "@solidjs/router";
+import { createAsync, revalidate } from "@solidjs/router";
 import { useMachine } from "@xstate/solid";
 import { useApp } from "../stores/app";
 import { balancesQuery, refetchBalances } from "../stores/balances";
 import { showToast } from "../stores/toast";
-import { postQuote, postConfirm, getSwapStatus } from "../api";
+import { postQuote, postConfirm, getSwapStatus, getTxState } from "../api";
 import { haptic } from "../lib/telegram";
 import { NATIVE_TOKEN } from "../types";
 import { useLocalStorage } from "../lib/hooks/useLocalStorage";
@@ -18,6 +18,9 @@ type SelectorTarget = "from" | "to" | null;
 const DEBOUNCE_MS = 500;
 const QUOTE_TTL_MS = 30_000;
 const STATUS_POLL_MS = 4_000;
+const TX_STATE_POLL_MS = 2_000;
+const TERMINAL_TX_STATUSES = new Set(["confirmed", "completed", "done"]);
+const FAILED_TX_STATUSES = new Set(["failed", "reverted", "error"]);
 
 const SwapPage: Component = () => {
   const { chains, receiveChains, destinationAddress, setDestinationAddress } = useApp();
@@ -31,8 +34,9 @@ const SwapPage: Component = () => {
   const quoting = () => state.matches("quoting");
   const txHash = () => state.context.txHash;
   const statusMsg = () => state.context.statusMsg;
-  const progress = (): "confirming" | "pending" | "done" | "failed" | null => {
+  const progress = (): "confirming" | "submitting" | "pending" | "done" | "failed" | null => {
     if (state.matches("confirming")) return "confirming";
+    if (state.matches("submitting")) return "submitting";
     if (state.matches("pending")) return "pending";
     if (state.matches("done")) return "done";
     if (state.matches("failed")) return "failed";
@@ -81,11 +85,13 @@ const SwapPage: Component = () => {
   let quoteVersion = 0;
   let quoteAgeTimer: ReturnType<typeof setInterval> | undefined;
   let statusPollTimer: ReturnType<typeof setInterval> | undefined;
+  let txStatePollTimer: ReturnType<typeof setInterval> | undefined;
 
   onCleanup(() => {
     clearTimeout(debounceTimer);
     clearInterval(quoteAgeTimer);
     clearInterval(statusPollTimer);
+    clearInterval(txStatePollTimer);
     abortController?.abort();
   });
 
@@ -161,7 +167,43 @@ const SwapPage: Component = () => {
     scheduleQuote();
   });
 
-  // ── Post-swap status polling ──
+  // ── Post-swap polling ──
+  // Two phases:
+  //   1. /api/tx?submitId=... — runs from confirm acceptance until Privy
+  //      reports a real on-chain hash (or a terminal status if the swap was
+  //      already confirmed via idempotency).
+  //   2. /api/status?txHash=... — runs once the hash is known, surfacing
+  //      LI.FI's rich substatus messages until the swap settles.
+
+  function startTxStatePoll(submitId: string) {
+    clearInterval(txStatePollTimer);
+    txStatePollTimer = setInterval(async () => {
+      try {
+        const res = await getTxState(submitId);
+        const st = res.status.toLowerCase();
+        if (res.txHash) {
+          clearInterval(txStatePollTimer);
+          send({ type: "TX_HASH_READY", txHash: res.txHash });
+          startStatusPoll(res.txHash);
+        } else if (TERMINAL_TX_STATUSES.has(st)) {
+          // Idempotent hit on an already-settled row.
+          clearInterval(txStatePollTimer);
+          send({ type: "STATUS_DONE" });
+          haptic("success");
+          refetchBalances();
+          revalidate("lifiHistory");
+        } else if (FAILED_TX_STATUSES.has(st)) {
+          clearInterval(txStatePollTimer);
+          send({ type: "STATUS_FAILED", message: res.status });
+          haptic("error");
+        }
+        // Otherwise still "submitting" — keep polling.
+      } catch {
+        // Tolerate transient errors; the api wrapper already retries 429s.
+      }
+    }, TX_STATE_POLL_MS);
+  }
+
   function startStatusPoll(hash: string) {
     clearInterval(statusPollTimer);
     statusPollTimer = setInterval(async () => {
@@ -174,6 +216,7 @@ const SwapPage: Component = () => {
           send({ type: "STATUS_DONE", message: msg });
           haptic("success");
           refetchBalances();
+          revalidate("lifiHistory");
         } else if (st === "failed") {
           clearInterval(statusPollTimer);
           send({ type: "STATUS_FAILED", message: msg });
@@ -208,8 +251,16 @@ const SwapPage: Component = () => {
     send({ type: "CONFIRM" });
     try {
       const result = await postConfirm();
-      send({ type: "CONFIRM_SUCCESS", txHash: result.txHash });
-      startStatusPoll(result.txHash);
+      send({ type: "SUBMIT_ACCEPTED", submitId: result.submitId });
+      // Privy may return a synchronous txHash if this is an idempotent retry
+      // of an already-submitted swap. Skip the /api/tx poll and go straight
+      // to LI.FI status polling in that case.
+      if (result.txHash) {
+        send({ type: "TX_HASH_READY", txHash: result.txHash });
+        startStatusPoll(result.txHash);
+      } else {
+        startTxStatePoll(result.submitId);
+      }
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Swap failed";
       showToast(msg);
@@ -221,6 +272,7 @@ const SwapPage: Component = () => {
   function resetSwap() {
     setAmount("");
     clearInterval(statusPollTimer);
+    clearInterval(txStatePollTimer);
     clearInterval(quoteAgeTimer);
     send({ type: "RESET" });
     refetchBalances();
@@ -228,6 +280,7 @@ const SwapPage: Component = () => {
 
   function retrySwap() {
     clearInterval(statusPollTimer);
+    clearInterval(txStatePollTimer);
     send({ type: "RESET" });
     scheduleQuote();
   }
@@ -308,6 +361,19 @@ const SwapPage: Component = () => {
 
   const isValidAddress = (addr: string) => /^0x[0-9a-fA-F]{40}$/.test(addr);
 
+  async function copyDestination(e: MouseEvent) {
+    e.stopPropagation();
+    const addr = destinationAddress();
+    if (!addr) return;
+    try {
+      await navigator.clipboard.writeText(addr);
+      haptic("light");
+      showToast("Destination address copied");
+    } catch {
+      showToast("Failed to copy");
+    }
+  }
+
   async function saveDestination() {
     const addr = destInput().trim();
     if (!isValidAddress(addr)) {
@@ -361,7 +427,15 @@ const SwapPage: Component = () => {
         {/* Destination */}
         <div class={s.destIndicator} onClick={() => { setDestEditing(true); haptic("light"); }}>
           <span class={s.destIndicatorLabel}>To wallet</span>
-          <span class={s.destIndicatorAddr}>{destinationAddress().slice(0, 6)}...{destinationAddress().slice(-4)} &#9998;</span>
+          <span class={s.destIndicatorAddr}>
+            {destinationAddress().slice(0, 6)}...{destinationAddress().slice(-4)}
+            <button type="button" class={s.destIndicatorIconBtn} onClick={copyDestination} aria-label="Copy destination address" title="Copy address">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+            </button>
+            <span class={s.destIndicatorIcon} aria-hidden="true">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>
+            </span>
+          </span>
         </div>
 
         <div class={s.card}>
@@ -479,10 +553,16 @@ const SwapPage: Component = () => {
       {/* ── PROGRESS / RESULT ── */}
       <Show when={progress()}>
         <div class={s.swapProgress}>
-          {/* Confirming / Pending — spinner */}
-          <Show when={progress() === "confirming" || progress() === "pending"}>
+          {/* Confirming / Submitting / Pending — spinner */}
+          <Show when={progress() === "confirming" || progress() === "submitting" || progress() === "pending"}>
             <div class={s.progressSpinner} />
-            <h3>{progress() === "confirming" ? "Confirming..." : "Swapping"}</h3>
+            <h3>
+              {progress() === "confirming"
+                ? "Confirming..."
+                : progress() === "submitting"
+                  ? "Submitting"
+                  : "Swapping"}
+            </h3>
             <p class={s.statusText}>{statusMsg() || "Waiting for confirmation..."}</p>
             <Show when={txHash()}>
               <div class={s.hash}>{txHash()}</div>
@@ -492,7 +572,7 @@ const SwapPage: Component = () => {
           {/* Done */}
           <Show when={progress() === "done"}>
             <div class={s.progressIconSuccess}>
-              <svg viewBox="0 0 24 24" stroke="#3CE3AB"><path d="M5 13l4 4L19 7" /></svg>
+              <svg viewBox="0 0 24 24" stroke="currentColor"><path d="M5 13l4 4L19 7" /></svg>
             </div>
             <h3>Swap Complete</h3>
             <p class={s.statusText}>{statusMsg() || "Your gas has arrived!"}</p>
@@ -503,7 +583,7 @@ const SwapPage: Component = () => {
           {/* Failed */}
           <Show when={progress() === "failed"}>
             <div class={s.progressIconFail}>
-              <svg viewBox="0 0 24 24" stroke="#F23674"><path d="M18 6L6 18M6 6l12 12" /></svg>
+              <svg viewBox="0 0 24 24" stroke="currentColor"><path d="M18 6L6 18M6 6l12 12" /></svg>
             </div>
             <h3>Swap Failed</h3>
             <p class={s.statusText}>{statusMsg() || "Something went wrong"}</p>

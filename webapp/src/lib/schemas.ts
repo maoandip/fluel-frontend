@@ -80,9 +80,33 @@ export const SwapStatusSchema = v.object({
 });
 
 // ── Confirm ────────────────────────────────────────────────────────
+// /api/confirm now returns as soon as Privy accepts the swap submission, before
+// the on-chain hash is known. The frontend uses submitId to poll /api/tx for
+// the final state. txHash is null until Privy reports confirmed.
 
 export const ConfirmResponseSchema = v.object({
-  txHash: v.string(),
+  submitId: v.string(),
+  privyTxId: v.nullable(v.string()),
+  status: v.string(),
+  txHash: v.nullable(v.string()),
+});
+
+// ── Tx state polling ───────────────────────────────────────────────
+// GET /api/tx?submitId=... — frontend polls this to learn when the row moves
+// from 'submitting' to a real on-chain tx. Most fields mirror tx_history.
+
+export const TxStateResponseSchema = v.object({
+  submitId: v.string(),
+  status: v.string(), // submitting | pending | confirmed | reverted | failed | error
+  txHash: v.nullable(v.string()),
+  privyTxId: v.nullable(v.string()),
+  fromChain: v.nullable(v.string()),
+  toChain: v.nullable(v.string()),
+  fromAmount: v.nullable(v.string()),
+  toAmount: v.nullable(v.string()),
+  toToken: v.nullable(v.string()),
+  feeUsd: v.nullable(v.string()),
+  createdAt: v.number(),
 });
 
 // ── Destination ────────────────────────────────────────────────────

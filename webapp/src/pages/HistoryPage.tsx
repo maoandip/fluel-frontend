@@ -1,8 +1,11 @@
 import { Component, Show, For, createSignal, createMemo, onMount, onCleanup } from "solid-js";
-import { getLifiHistory, type LifiTransfer } from "../api";
+import { revalidate } from "@solidjs/router";
+import type { LifiTransfer } from "../api";
+import { queries } from "../lib/queries";
 import { useApp } from "../stores/app";
 import EmptyState from "../components/ui/EmptyState";
 import Skeleton from "../components/ui/Skeleton";
+import QueryErrorFallback from "../components/ui/QueryErrorFallback";
 import { txStatusClass } from "../lib/status";
 import s from "./HistoryPage.module.css";
 
@@ -26,7 +29,8 @@ const HistoryPage: Component = () => {
   const [loading, setLoading] = createSignal(true);
   const [loadingMore, setLoadingMore] = createSignal(false);
   const [hasMore, setHasMore] = createSignal(true);
-  const [error, setError] = createSignal(false);
+  // Stored as the raw error so QueryErrorFallback can recognise ApiError(429).
+  const [error, setError] = createSignal<unknown>(null);
   const [page, setPage] = createSignal(1);
 
   let alive = true;
@@ -34,7 +38,7 @@ const HistoryPage: Component = () => {
 
   async function loadPage(p: number) {
     try {
-      const res = await getLifiHistory(p, PAGE_SIZE);
+      const res = await queries.lifiHistory(p, PAGE_SIZE);
       if (!alive) return;
       const items = res.transfers ?? [];
       if (p === 1) {
@@ -43,9 +47,9 @@ const HistoryPage: Component = () => {
         setTransfers((prev) => [...prev, ...items]);
       }
       setHasMore(items.length >= PAGE_SIZE);
-    } catch {
+    } catch (err) {
       if (!alive) return;
-      if (p === 1) setError(true);
+      if (p === 1) setError(err);
     }
   }
 
@@ -53,6 +57,18 @@ const HistoryPage: Component = () => {
     await loadPage(1);
     if (alive) setLoading(false);
   });
+
+  async function retryLoad() {
+    setError(null);
+    setLoading(true);
+    setPage(1);
+    setHasMore(true);
+    // Mark the cache stale so the user explicitly retrying gets a fresh fetch
+    // rather than reading a stale rejection or a previously-cached success.
+    revalidate("lifiHistory");
+    await loadPage(1);
+    if (alive) setLoading(false);
+  }
 
   let loadMorePromise: Promise<void> | null = null;
 
@@ -109,10 +125,12 @@ const HistoryPage: Component = () => {
       </Show>
 
       <Show when={!loading() && error()}>
-        <div class="error-state">
-          <span class="error-state-msg">Failed to load history</span>
-          <button class="retry-btn" onClick={() => location.reload()}>Retry</button>
-        </div>
+        <QueryErrorFallback
+          err={error()}
+          reset={() => setError(null)}
+          label="history"
+          refetch={retryLoad}
+        />
       </Show>
 
       <Show when={!loading() && !error() && transfers().length === 0}>

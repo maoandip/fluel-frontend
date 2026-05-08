@@ -188,6 +188,6 @@
 .gasTileMid  { background: rgba(255, 185, 0, .10);  border-color: rgba(255, 185, 0, .13); }
 .gasTileHigh { background: rgba(242, 54, 116, .10); border-color: rgba(242, 54, 116, .13); }
 
-.gasTileValueLow  { color: #3CE3AB; }
+.gasTileValueLow  { color: var(--c-positive); }
 .gasTileValueMid  { color: #FFB900; }
-.gasTileValueHigh { color: #F23674; }
+.gasTileValueHigh { color: var(--c-negative); }

@@ -19,6 +19,11 @@
   --c-success:       var(--fluel-success);
   --c-error:         var(--fluel-error);
   --c-pending:       var(--fluel-pending);
+  /* Softer status indicators for badges and state colors. Distinct from the
+     brand-bright --c-success / --c-error, which are too intense for
+     repeated UI chrome (status pills, gas tiles, completion icons). */
+  --c-positive:      var(--fluel-gas-low);   /* #3CE3AB */
+  --c-negative:      var(--fluel-gas-high);  /* #F23674 */
   --c-border:        var(--fluel-border);
   --c-border-subtle: var(--fluel-border-subtle);
   --font:            var(--fluel-font-sans);

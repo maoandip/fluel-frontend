@@ -6,6 +6,7 @@ import { haptic } from "../lib/telegram";
 import { postGift } from "../api";
 import EmptyState from "../components/ui/EmptyState";
 import Skeleton from "../components/ui/Skeleton";
+import QueryErrorFallback from "../components/ui/QueryErrorFallback";
 import ChainPicker from "../components/chain/ChainPicker";
 import { giftStatusClass } from "../lib/status";
 import { queries } from "../lib/queries";
@@ -46,7 +47,7 @@ const EarnPage: Component = () => {
   function copyRefLink() {
     const stats = refStats();
     if (!stats?.refLink) return;
-    navigator.clipboard.writeText(stats.refLink).then(() => { haptic("success"); showToast("Referral link copied!"); })
+    navigator.clipboard.writeText(stats.refLink).then(() => { haptic("success"); showToast("Referral link copied"); })
       .catch(() => showToast("Failed to copy"));
   }
 
@@ -63,7 +64,7 @@ const EarnPage: Component = () => {
     try {
       const res = await postGift(amount, chain);
       haptic("success"); setLastClaimLink(res.claimLink);
-      showToast(`$${amount} gift created!`); refetchGifts();
+      showToast(`$${amount} gift created`); refetchGifts();
     } catch (err: any) { showToast(err.message || "Failed"); haptic("error"); }
     finally { setGiftLoading(false); }
   }
@@ -71,7 +72,7 @@ const EarnPage: Component = () => {
   function copyClaimLink() {
     const link = lastClaimLink();
     if (!link) return;
-    navigator.clipboard.writeText(link).then(() => { haptic("success"); showToast("Gift link copied!"); })
+    navigator.clipboard.writeText(link).then(() => { haptic("success"); showToast("Gift link copied"); })
       .catch(() => showToast("Failed to copy"));
   }
 
@@ -93,11 +94,8 @@ const EarnPage: Component = () => {
 
       {/* ═══ REFERRALS ═══ */}
       <Show when={section() === "referrals"}>
-        <ErrorBoundary fallback={(_err, reset) => (
-          <div class="error-state">
-            <span class="error-state-msg">Failed to load referral stats</span>
-            <button class="retry-btn" onClick={() => { refetchStats(); reset(); }}>Retry</button>
-          </div>
+        <ErrorBoundary fallback={(err, reset) => (
+          <QueryErrorFallback err={err} reset={reset} label="referral stats" refetch={refetchStats} />
         )}>
         <Suspense fallback={<div class={s.card}><Skeleton rows={3} /></div>}>
         <Show when={refStats()}>
@@ -174,11 +172,8 @@ const EarnPage: Component = () => {
           </div>
         </Show>
 
-        <ErrorBoundary fallback={(_err, reset) => (
-          <div class="error-state">
-            <span class="error-state-msg">Failed to load gifts</span>
-            <button class="retry-btn" onClick={() => { refetchGifts(); reset(); }}>Retry</button>
-          </div>
+        <ErrorBoundary fallback={(err, reset) => (
+          <QueryErrorFallback err={err} reset={reset} label="gifts" refetch={refetchGifts} />
         )}>
         <Suspense fallback={<div class={s.card}><Skeleton rows={2} /></div>}>
         <Show when={gifts() && gifts()!.length === 0}>

@@ -14,6 +14,7 @@ import {
   QuoteResponseSchema,
   SwapStatusSchema,
   ConfirmResponseSchema,
+  TxStateResponseSchema,
   DestinationResponseSchema,
   GasPricesResponseSchema,
   AlertListResponseSchema,
@@ -34,6 +35,27 @@ import {
 import { env } from "./config/env";
 const API_BASE = env.VITE_API_BASE;
 
+export class ApiError extends Error {
+  status: number;
+  /** Seconds the server asked us to wait, if it sent a Retry-After header. */
+  retryAfter?: number;
+  constructor(message: string, status: number, retryAfter?: number) {
+    super(message);
+    this.name = "ApiError";
+    this.status = status;
+    this.retryAfter = retryAfter;
+  }
+}
+
+function parseRetryAfter(header: string | null): number | undefined {
+  if (!header) return undefined;
+  const n = parseInt(header, 10);
+  // Clamp absurd values; an HTTP-date format is also legal but the backend
+  // emits seconds, so don't bother handling dates here.
+  if (!isNaN(n) && n >= 0 && n <= 600) return n;
+  return undefined;
+}
+
 // Optional response schema — if provided, the JSON body is validated at the
 // seam and a shape mismatch throws a developer-friendly error (with the
 // offending issues logged to the console for observability).
@@ -51,11 +73,26 @@ async function api<T>(
     headers["Content-Type"] = "application/json";
   }
 
-  const res = await fetch(`${API_BASE}${path}`, { ...options, headers });
+  const isIdempotent = !options.method || options.method.toUpperCase() === "GET";
+
+  let res = await fetch(`${API_BASE}${path}`, { ...options, headers });
+
+  // Transparent single retry on 429 for GETs. Never retry POST/DELETE — those
+  // can have side effects, and the caller's UI already handles their failures.
+  if (res.status === 429 && isIdempotent && !options.signal?.aborted) {
+    const waitSec = parseRetryAfter(res.headers.get("Retry-After")) ?? 1;
+    await new Promise((resolve) => setTimeout(resolve, waitSec * 1000));
+    if (!options.signal?.aborted) {
+      res = await fetch(`${API_BASE}${path}`, { ...options, headers });
+    }
+  }
 
   if (!res.ok) {
     const body = await res.json().catch(() => ({ error: res.statusText }));
-    throw new Error(body.error ?? `HTTP ${res.status}`);
+    const retryAfter = res.status === 429
+      ? parseRetryAfter(res.headers.get("Retry-After"))
+      : undefined;
+    throw new ApiError(body.error ?? `HTTP ${res.status}`, res.status, retryAfter);
   }
 
   const data = await res.json();
@@ -123,8 +160,21 @@ export function postQuote(amount: string, fromChain: string, toChain: string, si
 
 // ── Confirm ────────────────────────────────────────────────────────
 
+export type ConfirmResponse = v.InferOutput<typeof ConfirmResponseSchema>;
+
 export function postConfirm() {
   return api("/api/confirm", { method: "POST" }, ConfirmResponseSchema);
+}
+
+// ── Tx state polling ──────────────────────────────────────────────
+// /api/confirm returns as soon as the swap is accepted by Privy, before the
+// on-chain hash is known. Poll /api/tx?submitId=... to learn when txHash
+// arrives, then hand off to /api/status for rich LI.FI progress messages.
+
+export type TxStateResponse = v.InferOutput<typeof TxStateResponseSchema>;
+
+export function getTxState(submitId: string) {
+  return api(`/api/tx?submitId=${encodeURIComponent(submitId)}`, {}, TxStateResponseSchema);
 }
 
 // ── Swap status ───────────────────────────────────────────────────

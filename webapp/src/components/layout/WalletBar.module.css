@@ -48,10 +48,8 @@
 }
 
 .copy {
-  font-family: var(--font-mono);
-  font-size: 12px;
-  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
   color: var(--c-accent);
   flex-shrink: 0;
-  letter-spacing: 0.02em;
 }

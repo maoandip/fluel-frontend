@@ -11,6 +11,7 @@ import { fmtGwei, gweiLevel } from "../lib/format";
 import { queries } from "../lib/queries";
 import EmptyState from "../components/ui/EmptyState";
 import Skeleton from "../components/ui/Skeleton";
+import QueryErrorFallback from "../components/ui/QueryErrorFallback";
 import ChainPicker from "../components/chain/ChainPicker";
 import s from "./AutomatePage.module.css";
 
@@ -104,11 +105,8 @@ const AutomatePage: Component = () => {
 
       {/* ═══ GAS ALERTS ═══ */}
       <Show when={section() === "alerts"}>
-        <ErrorBoundary fallback={(_err, reset) => (
-          <div class="error-state">
-            <span class="error-state-msg">Failed to load gas prices</span>
-            <button class="retry-btn" onClick={() => { refetchGasPrices(); reset(); }}>Retry</button>
-          </div>
+        <ErrorBoundary fallback={(err, reset) => (
+          <QueryErrorFallback err={err} reset={reset} label="gas prices" refetch={refetchGasPrices} />
         )}>
         <Suspense fallback={<div class={s.card}><Skeleton rows={3} /></div>}>
         <Show when={gasPrices()}>
@@ -181,11 +179,8 @@ const AutomatePage: Component = () => {
         </div>
 
         {/* Alert list */}
-        <ErrorBoundary fallback={(_err, reset) => (
-          <div class="error-state">
-            <span class="error-state-msg">Failed to load alerts</span>
-            <button class="retry-btn" onClick={() => { refetchAlerts(); reset(); }}>Retry</button>
-          </div>
+        <ErrorBoundary fallback={(err, reset) => (
+          <QueryErrorFallback err={err} reset={reset} label="alerts" refetch={refetchAlerts} />
         )}>
         <Suspense fallback={<div class={s.card}><Skeleton rows={2} /></div>}>
         <Show when={alerts() && alerts()!.length === 0}>
@@ -244,11 +239,8 @@ const AutomatePage: Component = () => {
           </button>
         </div>
 
-        <ErrorBoundary fallback={(_err, reset) => (
-          <div class="error-state">
-            <span class="error-state-msg">Failed to load refills</span>
-            <button class="retry-btn" onClick={() => { refetchRefills(); reset(); }}>Retry</button>
-          </div>
+        <ErrorBoundary fallback={(err, reset) => (
+          <QueryErrorFallback err={err} reset={reset} label="refills" refetch={refetchRefills} />
         )}>
         <Suspense fallback={<div class={s.card}><Skeleton rows={2} /></div>}>
         <Show when={refills() && refills()!.length === 0}>

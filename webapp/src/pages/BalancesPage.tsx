@@ -7,6 +7,7 @@ import { showToast } from "../stores/toast";
 import { haptic } from "../lib/telegram";
 import Skeleton from "../components/ui/Skeleton";
 import EmptyState from "../components/ui/EmptyState";
+import QueryErrorFallback from "../components/ui/QueryErrorFallback";
 import WalletBar from "../components/layout/WalletBar";
 import TokenChainIcon from "../components/chain/TokenChainIcon";
 import { NATIVE_TOKEN, type TokenBalance } from "../types";
@@ -94,11 +95,8 @@ const BalancesPage: Component = () => {
     <div class="page">
       <div class={s.walletRow}><WalletBar /></div>
 
-      <ErrorBoundary fallback={(_err, reset) => (
-        <div class="error-state">
-          <span class="error-state-msg">Failed to load balances</span>
-          <button class="retry-btn" onClick={() => { refetchBalances(); reset(); }}>Retry</button>
-        </div>
+      <ErrorBoundary fallback={(err, reset) => (
+        <QueryErrorFallback err={err} reset={reset} label="balances" refetch={refetchBalances} />
       )}>
         <Suspense fallback={<div class={s.card}><Skeleton rows={4} /></div>}>
       {/* Empty */}
