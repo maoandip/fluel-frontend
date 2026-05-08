@@ -47,11 +47,10 @@ export class ApiError extends Error {
   }
 }
 
+// Backend emits Retry-After as seconds, never as an HTTP-date.
 function parseRetryAfter(header: string | null): number | undefined {
   if (!header) return undefined;
   const n = parseInt(header, 10);
-  // Clamp absurd values; an HTTP-date format is also legal but the backend
-  // emits seconds, so don't bother handling dates here.
   if (!isNaN(n) && n >= 0 && n <= 600) return n;
   return undefined;
 }
@@ -77,8 +76,7 @@ async function api<T>(
 
   let res = await fetch(`${API_BASE}${path}`, { ...options, headers });
 
-  // Transparent single retry on 429 for GETs. Never retry POST/DELETE — those
-  // can have side effects, and the caller's UI already handles their failures.
+  // Single 429 retry for GETs only — POST/DELETE could double-mutate.
   if (res.status === 429 && isIdempotent && !options.signal?.aborted) {
     const waitSec = parseRetryAfter(res.headers.get("Retry-After")) ?? 1;
     await new Promise((resolve) => setTimeout(resolve, waitSec * 1000));
@@ -167,14 +165,11 @@ export function postConfirm() {
 }
 
 // ── Tx state polling ──────────────────────────────────────────────
-// /api/confirm returns as soon as the swap is accepted by Privy, before the
-// on-chain hash is known. Poll /api/tx?submitId=... to learn when txHash
-// arrives, then hand off to /api/status for rich LI.FI progress messages.
+// /api/confirm returns before the on-chain hash is known. Poll /api/tx by
+// submitId; pass waitSec to long-poll (server caps at 30s).
 
 export type TxStateResponse = v.InferOutput<typeof TxStateResponseSchema>;
 
-// Backend supports ?wait=<seconds> to long-poll for state changes (max 30s).
-// Pass `signal` so the caller can abort an in-flight long-poll on cleanup.
 export function getTxState(submitId: string, waitSec = 0, signal?: AbortSignal) {
   const wait = waitSec > 0 ? `&wait=${waitSec}` : "";
   return api(

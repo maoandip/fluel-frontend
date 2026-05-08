@@ -9,9 +9,8 @@ interface Props {
   refetch: () => void;
 }
 
-// Per-section ErrorBoundary fallback. Recognises 429s from ApiError so a
-// rate-limited section doesn't read as a generic outage, and so the Retry
-// button tells the user how long to wait if Retry-After was set.
+// Per-section ErrorBoundary fallback. Distinguishes 429s so rate limits
+// don't read as outages.
 export default function QueryErrorFallback(props: Props) {
   const isRateLimit = () => props.err instanceof ApiError && props.err.status === 429;
   const retryAfter = () => isRateLimit() ? (props.err as ApiError).retryAfter : undefined;

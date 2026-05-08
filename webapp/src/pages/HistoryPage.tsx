@@ -29,7 +29,7 @@ const HistoryPage: Component = () => {
   const [loading, setLoading] = createSignal(true);
   const [loadingMore, setLoadingMore] = createSignal(false);
   const [hasMore, setHasMore] = createSignal(true);
-  // Stored as the raw error so QueryErrorFallback can recognise ApiError(429).
+  // Raw error (not boolean) so QueryErrorFallback can detect ApiError(429).
   const [error, setError] = createSignal<unknown>(null);
   const [page, setPage] = createSignal(1);
 
@@ -63,8 +63,6 @@ const HistoryPage: Component = () => {
     setLoading(true);
     setPage(1);
     setHasMore(true);
-    // Mark the cache stale so the user explicitly retrying gets a fresh fetch
-    // rather than reading a stale rejection or a previously-cached success.
     revalidate("lifiHistory");
     await loadPage(1);
     if (alive) setLoading(false);

@@ -17,10 +17,7 @@ type SelectorTarget = "from" | "to" | null;
 
 const DEBOUNCE_MS = 500;
 const QUOTE_TTL_MS = 30_000;
-// Long-poll wait window. Server caps at 30s; matching here lets a single
-// HTTP request cover the typical Privy/LI.FI transition latency.
 const LONG_POLL_SEC = 30;
-// Backoff after a network/server error before re-issuing a long-poll.
 const POLL_RETRY_MS = 1_000;
 const TERMINAL_TX_STATUSES = new Set(["confirmed", "completed", "done"]);
 const FAILED_TX_STATUSES = new Set(["failed", "reverted", "error"]);
@@ -87,8 +84,6 @@ const SwapPage: Component = () => {
   let abortController: AbortController | undefined;
   let quoteVersion = 0;
   let quoteAgeTimer: ReturnType<typeof setInterval> | undefined;
-  // Each long-poll loop owns a single AbortController so cleanup can cancel
-  // the in-flight request (which may be hanging up to LONG_POLL_SEC).
   let txStateAbort: AbortController | undefined;
   let statusAbort: AbortController | undefined;
 
@@ -176,17 +171,9 @@ const SwapPage: Component = () => {
   });
 
   // ── Post-swap long-poll loops ──
-  // Two phases, each driven by a recursive `await` loop instead of a fixed-
-  // interval timer:
-  //   1. /api/tx?submitId=...&wait=30 — runs from confirm acceptance until
-  //      Privy reports a real on-chain hash (or a terminal status if the
-  //      swap was already settled via idempotency).
-  //   2. /api/status?txHash=...&wait=30 — runs once the hash is known,
-  //      surfacing LI.FI's rich substatus messages until the swap settles.
-  //
-  // The backend holds each request open until either an event fires (Privy
-  // reconciler, LI.FI status change) or the wait window expires. Either
-  // way the loop re-issues until a terminal state or the controller aborts.
+  // Phase 1 polls /api/tx until txHash arrives; phase 2 polls /api/status
+  // for LI.FI substatus until the swap settles. Each loop owns an
+  // AbortController so cleanup/reset/retry can cancel an in-flight request.
 
   function isAborted(err: unknown): boolean {
     return (err as { name?: string })?.name === "AbortError";
@@ -218,12 +205,9 @@ const SwapPage: Component = () => {
           haptic("error");
           return;
         }
-        // Server returned a non-terminal state — long-poll timed out without
-        // a transition. Re-issue immediately.
+        // Long-poll timed out with no transition — loop and re-issue.
       } catch (err) {
         if (isAborted(err)) return;
-        // Network/server error; api() already retried 429s. Brief pause so
-        // we don't spin during a backend outage.
         await new Promise((r) => setTimeout(r, POLL_RETRY_MS));
       }
     }
@@ -251,7 +235,6 @@ const SwapPage: Component = () => {
           haptic("error");
           return;
         }
-        // Status changed but not terminal — surface and loop.
         send({ type: "STATUS_UPDATE", message: msg });
       } catch (err) {
         if (isAborted(err)) return;
@@ -282,9 +265,7 @@ const SwapPage: Component = () => {
     try {
       const result = await postConfirm();
       send({ type: "SUBMIT_ACCEPTED", submitId: result.submitId });
-      // Privy may return a synchronous txHash if this is an idempotent retry
-      // of an already-submitted swap. Skip the /api/tx poll and go straight
-      // to LI.FI status polling in that case.
+      // Synchronous txHash means an idempotent hit on an already-submitted swap.
       if (result.txHash) {
         send({ type: "TX_HASH_READY", txHash: result.txHash });
         startStatusPoll(result.txHash);
