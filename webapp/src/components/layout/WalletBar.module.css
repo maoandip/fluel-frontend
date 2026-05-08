@@ -50,6 +50,11 @@
 .copy {
   display: inline-flex;
   align-items: center;
-  color: var(--c-accent);
+  color: var(--c-muted);
   flex-shrink: 0;
+  transition: color 0.15s;
+}
+
+.bar:active .copy {
+  color: var(--c-accent);
 }

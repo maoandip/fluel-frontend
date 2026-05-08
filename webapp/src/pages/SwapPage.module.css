@@ -620,37 +620,57 @@
   color: var(--c-muted);
 }
 
+/* Mirrors WalletBar styling so the deposit and destination addresses read
+   as a matched pair. Coral dot signals "destination" vs WalletBar's mint
+   "deposit" — same shape, semantic colour distinction. */
 .destIndicator {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  padding: 8px 16px;
-  background: rgba(0, 255, 178, .03);
-  border: 1px solid var(--c-border-subtle);
+  gap: 8px;
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
   border-radius: 4px;
+  padding: 10px 14px;
   cursor: pointer;
-  transition: border-color 0.15s;
+  transition: background 0.15s;
+  user-select: none;
   -webkit-tap-highlight-color: transparent;
 }
 
-.destIndicator:active {
-  border-color: rgba(0, 255, 178, .15);
+.destIndicatorDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--c-secondary);
+  box-shadow: 0 0 8px rgba(255, 122, 92, 0.4);
+  flex-shrink: 0;
+}
+
+.destIndicatorInfo {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  overflow: hidden;
 }
 
 .destIndicatorLabel {
-  font-size: 12px;
-  font-weight: 500;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
   color: var(--c-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
 }
 
 .destIndicatorAddr {
   font-family: var(--font-mono);
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 500;
-  color: var(--c-muted);
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
+  color: var(--c-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .destIndicatorIconBtn,
@@ -658,7 +678,9 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  color: inherit;
+  color: var(--c-muted);
+  flex-shrink: 0;
+  transition: color 0.15s;
 }
 
 .destIndicatorIconBtn {
@@ -667,9 +689,12 @@
   border: none;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
-  transition: color 0.15s;
 }
 
 .destIndicatorIconBtn:active {
+  color: var(--c-accent);
+}
+
+.destIndicator:active .destIndicatorIcon {
   color: var(--c-accent);
 }

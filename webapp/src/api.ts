@@ -173,16 +173,28 @@ export function postConfirm() {
 
 export type TxStateResponse = v.InferOutput<typeof TxStateResponseSchema>;
 
-export function getTxState(submitId: string) {
-  return api(`/api/tx?submitId=${encodeURIComponent(submitId)}`, {}, TxStateResponseSchema);
+// Backend supports ?wait=<seconds> to long-poll for state changes (max 30s).
+// Pass `signal` so the caller can abort an in-flight long-poll on cleanup.
+export function getTxState(submitId: string, waitSec = 0, signal?: AbortSignal) {
+  const wait = waitSec > 0 ? `&wait=${waitSec}` : "";
+  return api(
+    `/api/tx?submitId=${encodeURIComponent(submitId)}${wait}`,
+    { signal },
+    TxStateResponseSchema,
+  );
 }
 
 // ── Swap status ───────────────────────────────────────────────────
 
 export type SwapStatus = v.InferOutput<typeof SwapStatusSchema>;
 
-export function getSwapStatus(txHash: string) {
-  return api(`/api/status?txHash=${encodeURIComponent(txHash)}`, {}, SwapStatusSchema);
+export function getSwapStatus(txHash: string, waitSec = 0, signal?: AbortSignal) {
+  const wait = waitSec > 0 ? `&wait=${waitSec}` : "";
+  return api(
+    `/api/status?txHash=${encodeURIComponent(txHash)}${wait}`,
+    { signal },
+    SwapStatusSchema,
+  );
 }
 
 // ── LI.FI history ──────────────────────────────────────────────────

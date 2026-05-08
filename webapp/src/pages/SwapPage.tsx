@@ -17,8 +17,11 @@ type SelectorTarget = "from" | "to" | null;
 
 const DEBOUNCE_MS = 500;
 const QUOTE_TTL_MS = 30_000;
-const STATUS_POLL_MS = 4_000;
-const TX_STATE_POLL_MS = 2_000;
+// Long-poll wait window. Server caps at 30s; matching here lets a single
+// HTTP request cover the typical Privy/LI.FI transition latency.
+const LONG_POLL_SEC = 30;
+// Backoff after a network/server error before re-issuing a long-poll.
+const POLL_RETRY_MS = 1_000;
 const TERMINAL_TX_STATUSES = new Set(["confirmed", "completed", "done"]);
 const FAILED_TX_STATUSES = new Set(["failed", "reverted", "error"]);
 
@@ -84,14 +87,19 @@ const SwapPage: Component = () => {
   let abortController: AbortController | undefined;
   let quoteVersion = 0;
   let quoteAgeTimer: ReturnType<typeof setInterval> | undefined;
-  let statusPollTimer: ReturnType<typeof setInterval> | undefined;
-  let txStatePollTimer: ReturnType<typeof setInterval> | undefined;
+  // Each long-poll loop owns a single AbortController so cleanup can cancel
+  // the in-flight request (which may be hanging up to LONG_POLL_SEC).
+  let txStateAbort: AbortController | undefined;
+  let statusAbort: AbortController | undefined;
+
+  function stopTxStatePoll() { txStateAbort?.abort(); txStateAbort = undefined; }
+  function stopStatusPoll() { statusAbort?.abort(); statusAbort = undefined; }
 
   onCleanup(() => {
     clearTimeout(debounceTimer);
     clearInterval(quoteAgeTimer);
-    clearInterval(statusPollTimer);
-    clearInterval(txStatePollTimer);
+    stopTxStatePoll();
+    stopStatusPoll();
     abortController?.abort();
   });
 
@@ -167,67 +175,89 @@ const SwapPage: Component = () => {
     scheduleQuote();
   });
 
-  // ── Post-swap polling ──
-  // Two phases:
-  //   1. /api/tx?submitId=... — runs from confirm acceptance until Privy
-  //      reports a real on-chain hash (or a terminal status if the swap was
-  //      already confirmed via idempotency).
-  //   2. /api/status?txHash=... — runs once the hash is known, surfacing
-  //      LI.FI's rich substatus messages until the swap settles.
+  // ── Post-swap long-poll loops ──
+  // Two phases, each driven by a recursive `await` loop instead of a fixed-
+  // interval timer:
+  //   1. /api/tx?submitId=...&wait=30 — runs from confirm acceptance until
+  //      Privy reports a real on-chain hash (or a terminal status if the
+  //      swap was already settled via idempotency).
+  //   2. /api/status?txHash=...&wait=30 — runs once the hash is known,
+  //      surfacing LI.FI's rich substatus messages until the swap settles.
+  //
+  // The backend holds each request open until either an event fires (Privy
+  // reconciler, LI.FI status change) or the wait window expires. Either
+  // way the loop re-issues until a terminal state or the controller aborts.
 
-  function startTxStatePoll(submitId: string) {
-    clearInterval(txStatePollTimer);
-    txStatePollTimer = setInterval(async () => {
+  function isAborted(err: unknown): boolean {
+    return (err as { name?: string })?.name === "AbortError";
+  }
+
+  async function startTxStatePoll(submitId: string) {
+    stopTxStatePoll();
+    const ctl = new AbortController();
+    txStateAbort = ctl;
+    while (!ctl.signal.aborted) {
       try {
-        const res = await getTxState(submitId);
+        const res = await getTxState(submitId, LONG_POLL_SEC, ctl.signal);
+        if (ctl.signal.aborted) return;
         const st = res.status.toLowerCase();
         if (res.txHash) {
-          clearInterval(txStatePollTimer);
           send({ type: "TX_HASH_READY", txHash: res.txHash });
           startStatusPoll(res.txHash);
-        } else if (TERMINAL_TX_STATUSES.has(st)) {
-          // Idempotent hit on an already-settled row.
-          clearInterval(txStatePollTimer);
+          return;
+        }
+        if (TERMINAL_TX_STATUSES.has(st)) {
           send({ type: "STATUS_DONE" });
           haptic("success");
           refetchBalances();
           revalidate("lifiHistory");
-        } else if (FAILED_TX_STATUSES.has(st)) {
-          clearInterval(txStatePollTimer);
+          return;
+        }
+        if (FAILED_TX_STATUSES.has(st)) {
           send({ type: "STATUS_FAILED", message: res.status });
           haptic("error");
+          return;
         }
-        // Otherwise still "submitting" — keep polling.
-      } catch {
-        // Tolerate transient errors; the api wrapper already retries 429s.
+        // Server returned a non-terminal state — long-poll timed out without
+        // a transition. Re-issue immediately.
+      } catch (err) {
+        if (isAborted(err)) return;
+        // Network/server error; api() already retried 429s. Brief pause so
+        // we don't spin during a backend outage.
+        await new Promise((r) => setTimeout(r, POLL_RETRY_MS));
       }
-    }, TX_STATE_POLL_MS);
+    }
   }
 
-  function startStatusPoll(hash: string) {
-    clearInterval(statusPollTimer);
-    statusPollTimer = setInterval(async () => {
+  async function startStatusPoll(hash: string) {
+    stopStatusPoll();
+    const ctl = new AbortController();
+    statusAbort = ctl;
+    while (!ctl.signal.aborted) {
       try {
-        const res = await getSwapStatus(hash);
+        const res = await getSwapStatus(hash, LONG_POLL_SEC, ctl.signal);
+        if (ctl.signal.aborted) return;
         const msg = res.message || res.substatus || res.status;
         const st = res.status.toLowerCase();
         if (st === "done" || st === "completed") {
-          clearInterval(statusPollTimer);
           send({ type: "STATUS_DONE", message: msg });
           haptic("success");
           refetchBalances();
           revalidate("lifiHistory");
-        } else if (st === "failed") {
-          clearInterval(statusPollTimer);
+          return;
+        }
+        if (st === "failed") {
           send({ type: "STATUS_FAILED", message: msg });
           haptic("error");
-        } else {
-          send({ type: "STATUS_UPDATE", message: msg });
+          return;
         }
-      } catch {
-        // keep polling on network errors
+        // Status changed but not terminal — surface and loop.
+        send({ type: "STATUS_UPDATE", message: msg });
+      } catch (err) {
+        if (isAborted(err)) return;
+        await new Promise((r) => setTimeout(r, POLL_RETRY_MS));
       }
-    }, STATUS_POLL_MS);
+    }
   }
 
   // ── Actions ──
@@ -271,16 +301,16 @@ const SwapPage: Component = () => {
 
   function resetSwap() {
     setAmount("");
-    clearInterval(statusPollTimer);
-    clearInterval(txStatePollTimer);
+    stopStatusPoll();
+    stopTxStatePoll();
     clearInterval(quoteAgeTimer);
     send({ type: "RESET" });
     refetchBalances();
   }
 
   function retrySwap() {
-    clearInterval(statusPollTimer);
-    clearInterval(txStatePollTimer);
+    stopStatusPoll();
+    stopTxStatePoll();
     send({ type: "RESET" });
     scheduleQuote();
   }
@@ -425,16 +455,32 @@ const SwapPage: Component = () => {
       {/* ── FORM ── */}
       <Show when={!progress() && destinationAddress() && !destEditing()}>
         {/* Destination */}
-        <div class={s.destIndicator} onClick={() => { setDestEditing(true); haptic("light"); }}>
-          <span class={s.destIndicatorLabel}>To wallet</span>
-          <span class={s.destIndicatorAddr}>
-            {destinationAddress().slice(0, 6)}...{destinationAddress().slice(-4)}
-            <button type="button" class={s.destIndicatorIconBtn} onClick={copyDestination} aria-label="Copy destination address" title="Copy address">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-            </button>
-            <span class={s.destIndicatorIcon} aria-hidden="true">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>
+        <div
+          class={s.destIndicator}
+          onClick={() => { setDestEditing(true); haptic("light"); }}
+          role="button"
+          aria-label="Edit destination wallet"
+          tabIndex={0}
+          onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setDestEditing(true); haptic("light"); } }}
+        >
+          <div class={s.destIndicatorDot} />
+          <div class={s.destIndicatorInfo}>
+            <span class={s.destIndicatorLabel}>To Wallet</span>
+            <span class={s.destIndicatorAddr}>
+              {destinationAddress().slice(0, 6)}...{destinationAddress().slice(-4)}
             </span>
+          </div>
+          <button
+            type="button"
+            class={s.destIndicatorIconBtn}
+            onClick={copyDestination}
+            aria-label="Copy destination address"
+            title="Copy address"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          </button>
+          <span class={s.destIndicatorIcon} aria-hidden="true">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>
           </span>
         </div>
 
