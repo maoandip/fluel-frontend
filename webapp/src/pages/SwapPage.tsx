@@ -57,20 +57,47 @@ const SwapPage: Component = () => {
   const DEFAULT_FROM = ["Base", "Arbitrum", "Polygon", "OP Mainnet", "Ethereum"];
   const DEFAULT_TO = ["Ethereum", "Arbitrum", "Base", "OP Mainnet", "Polygon"];
 
+  // ?chain={chainId} arrives from gas-alert bot notifications. Treat the
+  // alerted chain as the destination (toChain); fall back to fromChain if
+  // it isn't a valid receive chain.
+  const initialUrlChainId = (() => {
+    if (typeof window === "undefined") return null;
+    const v = parseInt(new URLSearchParams(window.location.search).get("chain") ?? "", 10);
+    if (isNaN(v)) return null;
+    const url = new URL(window.location.href);
+    url.searchParams.delete("chain");
+    window.history.replaceState({}, "", url.toString());
+    return v;
+  })();
+  let urlChainConsumed = false;
+
   createEffect(() => {
     const pay = chains();
     const recv = receiveChains();
+
+    if (!urlChainConsumed && initialUrlChainId !== null && (pay.length > 0 || recv.length > 0)) {
+      const recvMatch = recv.find((c) => c.id === initialUrlChainId);
+      if (recvMatch) {
+        setToChain(recvMatch.name);
+      } else {
+        const payMatch = pay.find((c) => c.id === initialUrlChainId);
+        if (payMatch) setFromChain(payMatch.name);
+      }
+      urlChainConsumed = true;
+    }
+
     if (pay.length > 0) {
       const cur = fromChain();
-      if (cur && !pay.some((c) => c.name === cur)) setFromChain("");
+      if (cur && (!pay.some((c) => c.name === cur) || cur === toChain())) setFromChain("");
       if (!fromChain()) {
-        const match = DEFAULT_FROM.find((name) => pay.some((c) => c.name === name));
+        const to = toChain();
+        const match = DEFAULT_FROM.find((name) => name !== to && pay.some((c) => c.name === name));
         if (match) setFromChain(match);
       }
     }
     if (recv.length > 0) {
       const cur = toChain();
-      if (cur && !recv.some((c) => c.name === cur)) setToChain("");
+      if (cur && (!recv.some((c) => c.name === cur) || cur === fromChain())) setToChain("");
       if (!toChain()) {
         const from = fromChain();
         const match = DEFAULT_TO.find((name) => name !== from && recv.some((c) => c.name === name));

@@ -20,7 +20,7 @@ if (typeof window !== "undefined") {
 const BalancesPage = lazy(() => import("./pages/BalancesPage"));
 const HistoryPage = lazy(() => import("./pages/HistoryPage"));
 const AutomatePage = lazy(() => import("./pages/AutomatePage"));
-const EarnPage = lazy(() => import("./pages/EarnPage"));
+const InvitePage = lazy(() => import("./pages/InvitePage"));
 
 const Splash = (props: { fadeOut?: boolean }) => (
   <div class={`${splash.screen} ${props.fadeOut ? splash.out : ""}`}>
@@ -95,7 +95,7 @@ const App: Component = () => (
     <Route path="/balance"  component={BalancesPage} />
     <Route path="/history"  component={HistoryPage} />
     <Route path="/automate" component={AutomatePage} />
-    <Route path="/earn"     component={EarnPage} />
+    <Route path="/invite"   component={InvitePage} />
     {/* Fallback: any unknown path lands on the swap page */}
     <Route path="*"         component={SwapPage} />
   </Router>

@@ -40,6 +40,10 @@ export interface AutoRefill {
   thresholdNative: number;
   refillAmountUsd: number;
   sourceChainName: string;
+  maxPerDay: number;
+  cooldownMinutes: number;
+  firesToday: number;
+  firesTodayDate: number;
 }
 
 export interface GasPriceData {
@@ -67,4 +71,5 @@ export interface Gift {
   txHash: string | null;
   createdAt: number;
   claimedAt: number | null;
+  claimLink: string;
 }

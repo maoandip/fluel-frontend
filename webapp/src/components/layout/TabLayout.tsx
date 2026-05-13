@@ -38,10 +38,13 @@ function AutomateIcon() {
   );
 }
 
-function EarnIcon() {
+function InviteIcon() {
   return (
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" />
+      <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+      <circle cx="8.5" cy="7" r="4" />
+      <line x1="20" y1="8" x2="20" y2="14" />
+      <line x1="23" y1="11" x2="17" y2="11" />
     </svg>
   );
 }
@@ -58,7 +61,7 @@ const tabs: TabDef[] = [
   { path: "/balance",  label: "Balance",  icon: BalanceIcon },
   { path: "/history",  label: "History",  icon: HistoryIcon },
   { path: "/automate", label: "Automate", icon: AutomateIcon },
-  { path: "/earn",     label: "Earn",     icon: EarnIcon },
+  { path: "/invite",   label: "Invite",   icon: InviteIcon },
 ];
 
 // ── Component ──────────────────────────────────────────────────────

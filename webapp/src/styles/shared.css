@@ -182,14 +182,21 @@
 }
 
 .list-item-primary {
-  font-size: 13px;
+  font-size: 15px;
   font-weight: 500;
   color: var(--c-text);
 }
 
 .list-item-secondary {
-  font-size: 11px;
+  font-size: 14px;
+  line-height: 1.4;
   color: var(--c-muted);
+}
+
+.fmt-sub {
+  font-size: 0.75em;
+  font-weight: 600;
+  vertical-align: sub;
 }
 
 /* ── Buttons ───────────────────────────────────────────────────────── */

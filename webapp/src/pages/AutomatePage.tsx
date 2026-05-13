@@ -1,13 +1,13 @@
 import {
   Component, Show, For, Suspense, ErrorBoundary,
-  createSignal, onMount, onCleanup,
+  createSignal, createEffect, on, onMount, onCleanup,
 } from "solid-js";
 import { createAsync, revalidate } from "@solidjs/router";
 import { useApp } from "../stores/app";
 import { showToast } from "../stores/toast";
 import { haptic, showConfirm } from "../lib/telegram";
 import { postAlert, deleteAlert, postRefill, deleteRefill } from "../api";
-import { fmtGwei, gweiLevel } from "../lib/format";
+import { fmtSmallEl, gweiLevel } from "../lib/format";
 import { queries } from "../lib/queries";
 import EmptyState from "../components/ui/EmptyState";
 import Skeleton from "../components/ui/Skeleton";
@@ -38,9 +38,38 @@ const AutomatePage: Component = () => {
   const [refillSourceChain, setRefillSourceChain] = createSignal("");
   const [refillThreshold, setRefillThreshold] = createSignal("");
   const [refillAmount, setRefillAmount] = createSignal("");
+  const [refillMaxPerDay, setRefillMaxPerDay] = createSignal("10");
+  const [refillCooldownMin, setRefillCooldownMin] = createSignal("30");
   const [refillLoading, setRefillLoading] = createSignal(false);
 
-  let gasPriceTimer: ReturnType<typeof setInterval> | undefined;
+  const [isRefreshing, setIsRefreshing] = createSignal(false);
+  const [isStale, setIsStale] = createSignal(false);
+  const STALE_AFTER_MS = 5 * 60_000;
+  let staleTimer: ReturnType<typeof setTimeout> | undefined;
+
+  async function refreshGasPrices() {
+    if (isRefreshing()) return;
+    setIsRefreshing(true);
+    try { await refetchGasPrices(); }
+    finally { setIsRefreshing(false); }
+  }
+
+  createEffect(() => {
+    if (!gasPrices()) return;
+    setIsStale(false);
+    clearTimeout(staleTimer);
+    staleTimer = setTimeout(() => setIsStale(true), STALE_AFTER_MS);
+  });
+
+  createEffect(on(section, (s) => {
+    if (s === "alerts") refreshGasPrices();
+  }, { defer: true }));
+
+  const onVisibility = () => {
+    if (document.visibilityState === "visible" && section() === "alerts") {
+      refreshGasPrices();
+    }
+  };
 
   onMount(() => {
     const c = chains();
@@ -49,10 +78,13 @@ const AutomatePage: Component = () => {
       setRefillGasChain(c[0].name);
       setRefillSourceChain(c.length > 1 ? c[1].name : c[0].name);
     }
-    gasPriceTimer = setInterval(() => refetchGasPrices(), 60_000);
+    document.addEventListener("visibilitychange", onVisibility);
   });
 
-  onCleanup(() => clearInterval(gasPriceTimer));
+  onCleanup(() => {
+    clearTimeout(staleTimer);
+    document.removeEventListener("visibilitychange", onVisibility);
+  });
 
   async function handleCreateAlert() {
     const chain = alertChain();
@@ -75,10 +107,14 @@ const AutomatePage: Component = () => {
   async function handleCreateRefill() {
     const gasChain = refillGasChain(), sourceChain = refillSourceChain();
     const threshold = parseFloat(refillThreshold()), amount = parseFloat(refillAmount());
+    const maxPerDay = parseInt(refillMaxPerDay(), 10);
+    const cooldownMin = parseInt(refillCooldownMin(), 10);
     if (!gasChain || !sourceChain || isNaN(threshold) || threshold <= 0 || isNaN(amount) || amount <= 0) { showToast("Fill in all fields"); return; }
+    if (isNaN(maxPerDay) || maxPerDay < 1) { showToast("Max per day must be at least 1"); return; }
+    if (isNaN(cooldownMin) || cooldownMin < 5) { showToast("Cooldown must be at least 5 minutes"); return; }
     setRefillLoading(true);
     try {
-      await postRefill(gasChain, threshold, amount, sourceChain);
+      await postRefill(gasChain, threshold, amount, sourceChain, maxPerDay, cooldownMin);
       setRefillThreshold(""); setRefillAmount(""); haptic("success"); showToast("Auto-refill created"); refetchRefills();
     } catch (err: any) { showToast(err.message || "Failed"); haptic("error"); }
     finally { setRefillLoading(false); }
@@ -92,6 +128,17 @@ const AutomatePage: Component = () => {
 
   const tileLevelClass = { low: "gasTileLow", mid: "gasTileMid", high: "gasTileHigh" } as const;
   const tileValueClass = { low: "gasTileValueLow", mid: "gasTileValueMid", high: "gasTileValueHigh" } as const;
+
+  const nativeSymbolFor = (chainName: string) =>
+    chains().find((c) => c.name === chainName)?.native?.toUpperCase() || "native";
+
+  // Treat the count as 0 when the backend's stored date is from a prior day —
+  // the backend resets on the next fire, not on the read path.
+  const firesTodayCount = (refill: { firesToday: number; firesTodayDate: number }) => {
+    const d = new Date();
+    const todayEpoch = Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()) / 1000;
+    return refill.firesTodayDate === todayEpoch ? refill.firesToday : 0;
+  };
 
   return (
     <div class="page">
@@ -123,13 +170,25 @@ const AutomatePage: Component = () => {
                 <div class={s.cardHeader}>
                   <div>
                     <div class={s.label}>Current Gas Prices</div>
-                    <div class={s.hint}>Sorted by cheapest gas</div>
+                    <Show when={isStale()} fallback={<div class={s.hint}>Sorted by cheapest gas</div>}>
+                      <div class={s.staleHint}>Stale — tap refresh</div>
+                    </Show>
                   </div>
-                  <Show when={total() > TOP_CHAINS}>
-                    <button class={s.toggleBtn} onClick={() => { setShowAllPrices(!showAllPrices()); haptic("selection"); }}>
-                      {showAllPrices() ? "Show less" : `All ${total()}`}
+                  <div class={s.headerActions}>
+                    <button
+                      class={`${s.refreshBtn} ${isRefreshing() ? s.refreshBtnSpinning : ""}`}
+                      onClick={() => { refreshGasPrices(); haptic("light"); }}
+                      disabled={isRefreshing()}
+                      title="Refresh gas prices"
+                    >
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/></svg>
                     </button>
-                  </Show>
+                    <Show when={total() > TOP_CHAINS}>
+                      <button class={s.toggleBtn} onClick={() => { setShowAllPrices(!showAllPrices()); haptic("selection"); }}>
+                        {showAllPrices() ? "Show less" : `All ${total()}`}
+                      </button>
+                    </Show>
+                  </div>
                 </div>
                 <div class={s.gasGrid}>
                   <For each={display()}>
@@ -144,7 +203,7 @@ const AutomatePage: Component = () => {
                             </Show>
                             <span class={s.gasTileChain}>{chain.name}</span>
                           </div>
-                          <span class={`${s.gasTileValue} ${s[tileValueClass[level]]}`}>{fmtGwei(priceGwei)}</span>
+                          <span class={`${s.gasTileValue} ${s[tileValueClass[level]]}`}>{fmtSmallEl(priceGwei)}</span>
                           <span class={s.gasTileUnit}>gwei</span>
                         </div>
                       );
@@ -195,7 +254,7 @@ const AutomatePage: Component = () => {
                   <div class="list-item">
                     <div class="list-item-info">
                       <span class="list-item-primary">{alert.chainName}</span>
-                      <span class="list-item-secondary">Below {fmtGwei(alert.thresholdGwei)} gwei</span>
+                      <span class="list-item-secondary">Below {fmtSmallEl(alert.thresholdGwei)} gwei</span>
                     </div>
                     <button class="remove-btn" onClick={() => handleDeleteAlert(alert.chainName)}>Remove</button>
                   </div>
@@ -221,9 +280,9 @@ const AutomatePage: Component = () => {
               <ChainPicker chains={chains()} value={refillSourceChain()} onChange={setRefillSourceChain} label="Source Chain" />
             </div>
           </div>
-          <div class={s.formRow}>
+          <div class={`${s.formRow} ${s.formRowSpaced}`}>
             <div class={s.inputGroup}>
-              <label class={s.inputLabel}>Threshold (native)</label>
+              <label class={s.inputLabel}>Threshold ({nativeSymbolFor(refillGasChain())})</label>
               <input class={s.input} type="text" inputMode="decimal" placeholder="e.g. 0.005"
                 value={refillThreshold()} onInput={(e) => setRefillThreshold(e.currentTarget.value)} />
             </div>
@@ -233,8 +292,20 @@ const AutomatePage: Component = () => {
                 value={refillAmount()} onInput={(e) => setRefillAmount(e.currentTarget.value)} />
             </div>
           </div>
+          <div class={s.formRow}>
+            <div class={s.inputGroup}>
+              <label class={s.inputLabel}>Max per day</label>
+              <input class={s.input} type="text" inputMode="numeric" placeholder="10"
+                value={refillMaxPerDay()} onInput={(e) => setRefillMaxPerDay(e.currentTarget.value)} />
+            </div>
+            <div class={s.inputGroup}>
+              <label class={s.inputLabel}>Cooldown (min)</label>
+              <input class={s.input} type="text" inputMode="numeric" placeholder="30"
+                value={refillCooldownMin()} onInput={(e) => setRefillCooldownMin(e.currentTarget.value)} />
+            </div>
+          </div>
           <button class={s.cta} onClick={handleCreateRefill}
-            disabled={refillLoading() || !refillGasChain() || !refillSourceChain() || !refillThreshold() || !refillAmount()}>
+            disabled={refillLoading() || !refillGasChain() || !refillSourceChain() || !refillThreshold() || !refillAmount() || !refillMaxPerDay() || !refillCooldownMin()}>
             {refillLoading() ? "Creating..." : "Create Refill"}
           </button>
         </div>
@@ -256,7 +327,10 @@ const AutomatePage: Component = () => {
                     <div class="list-item-info">
                       <span class="list-item-primary">{refill.chainName}</span>
                       <span class="list-item-secondary">
-                        Below {refill.thresholdNative} native, refill ${refill.refillAmountUsd} from {refill.sourceChainName}
+                        Below {fmtSmallEl(refill.thresholdNative)} {nativeSymbolFor(refill.chainName)}, refill ${refill.refillAmountUsd} from {refill.sourceChainName}
+                      </span>
+                      <span class="list-item-secondary">
+                        Today {firesTodayCount(refill)}/{refill.maxPerDay} · {refill.cooldownMinutes} min cooldown
                       </span>
                     </div>
                     <button class="remove-btn" onClick={() => handleDeleteRefill(refill.chainName)}>Remove</button>

@@ -34,6 +34,58 @@
   margin-bottom: 0;
 }
 
+.headerActions {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.refreshBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  background: rgba(0, 255, 178, .06);
+  border: 1px solid var(--c-border);
+  border-radius: 4px;
+  color: var(--c-muted);
+  cursor: pointer;
+  transition: color .15s, border-color .15s, background .15s;
+  -webkit-tap-highlight-color: transparent;
+  padding: 0;
+}
+
+.refreshBtn:hover {
+  color: var(--c-accent);
+  border-color: rgba(0, 255, 178, .2);
+}
+
+.refreshBtn:active {
+  color: var(--c-accent);
+  background: rgba(0, 255, 178, .12);
+  border-color: rgba(0, 255, 178, .3);
+}
+
+.refreshBtn:disabled {
+  cursor: not-allowed;
+}
+
+.refreshBtnSpinning svg {
+  animation: refreshSpin .8s linear infinite;
+}
+
+@keyframes refreshSpin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.staleHint {
+  font-size: 12px;
+  color: var(--c-negative);
+  margin-bottom: 0;
+}
+
 .toggleBtn {
   background: none;
   border: 1px solid var(--c-border);

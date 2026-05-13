@@ -280,15 +280,16 @@ export function getRefills() {
   return api("/api/refills", {}, RefillListResponseSchema) as Promise<{ refills: AutoRefill[] }>;
 }
 
-export function postRefill(chain: string, threshold: number, amount: number, sourceChain: string) {
+export function postRefill(
+  chain: string, threshold: number, amount: number, sourceChain: string,
+  maxPerDay: number, cooldownMinutes: number,
+) {
   // Backend returns { refill: AutoRefill } — envelope, not the bare object.
-  // Field names in the request body also differ from the frontend-facing
-  // camelCase: backend expects `chain`, `threshold`, `amount`, `sourceChain`.
   return api(
     "/api/refills",
     {
       method: "POST",
-      body: JSON.stringify({ chain, threshold, amount, sourceChain }),
+      body: JSON.stringify({ chain, threshold, amount, sourceChain, maxPerDay, cooldownMinutes }),
     },
     RefillCreateResponseSchema,
   );
@@ -323,7 +324,7 @@ export function postGift(amountUsd: number, chain: string) {
       body: JSON.stringify({ amountUsd, chain }),
     },
     GiftCreateResponseSchema,
-  ) as Promise<{ gift: Gift; claimLink: string }>;
+  ) as Promise<{ gift: Gift }>;
 }
 
 // ── Withdraw ─────────────────────────────────────────────────────

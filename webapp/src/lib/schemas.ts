@@ -170,6 +170,11 @@ const AutoRefillSchema = v.object({
   enabled: v.number(),
   lastTriggeredAt: v.number(),
   createdAt: v.number(),
+  maxPerDay: v.number(),
+  cooldownMinutes: v.number(),
+  firesToday: v.number(),
+  firesTodayDate: v.number(),
+  lastFailureNotifiedAt: v.number(),
 });
 
 export const RefillListResponseSchema = v.object({
@@ -212,6 +217,7 @@ const GiftSchema = v.object({
   txHash: v.nullable(v.string()),
   createdAt: v.number(),
   claimedAt: v.nullable(v.number()),
+  claimLink: v.string(),
   senderDestination: v.nullish(v.string()),
 });
 
@@ -221,7 +227,6 @@ export const GiftListResponseSchema = v.object({
 
 export const GiftCreateResponseSchema = v.object({
   gift: GiftSchema,
-  claimLink: v.string(),
 });
 
 // ── Withdraw ───────────────────────────────────────────────────────

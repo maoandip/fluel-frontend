@@ -7,6 +7,7 @@ import EmptyState from "../components/ui/EmptyState";
 import Skeleton from "../components/ui/Skeleton";
 import QueryErrorFallback from "../components/ui/QueryErrorFallback";
 import { txStatusClass } from "../lib/status";
+import { timeAgo } from "../lib/format";
 import s from "./HistoryPage.module.css";
 
 const PAGE_SIZE = 20;
@@ -87,19 +88,6 @@ const HistoryPage: Component = () => {
       loadMore();
     }
   }
-
-  function timeAgo(ts: number): string {
-    const diffMs = Date.now() - ts * 1000;
-    const mins = Math.floor(diffMs / 60000);
-    if (mins < 1) return "Just now";
-    if (mins < 60) return `${mins}m ago`;
-    const hrs = Math.floor(mins / 60);
-    if (hrs < 24) return `${hrs}h ago`;
-    const days = Math.floor(hrs / 24);
-    if (days < 7) return `${days}d ago`;
-    return new Date(ts * 1000).toLocaleDateString("en-US", { month: "short", day: "numeric" });
-  }
-
 
   function statusLabel(status: string): string {
     switch (status) {

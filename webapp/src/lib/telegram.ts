@@ -133,15 +133,26 @@ export function haptic(type: "light" | "medium" | "heavy" | "rigid" | "soft" | "
   }
 }
 
+// Telegram WebApp <6.2 throws synchronously on showConfirm/showAlert (both wrap
+// showPopup). Fall back to native dialogs so older clients don't dead-end.
 export function showConfirm(msg: string): Promise<boolean> {
   return new Promise((resolve) => {
-    tg.showConfirm(msg, (ok) => resolve(ok));
+    try {
+      tg.showConfirm(msg, (ok) => resolve(ok));
+    } catch {
+      resolve(window.confirm(msg));
+    }
   });
 }
 
 export function showAlert(msg: string): Promise<void> {
   return new Promise((resolve) => {
-    tg.showAlert(msg, () => resolve());
+    try {
+      tg.showAlert(msg, () => resolve());
+    } catch {
+      window.alert(msg);
+      resolve();
+    }
   });
 }
 
