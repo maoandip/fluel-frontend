@@ -47,7 +47,7 @@ export default function Privacy() {
           <li>Relay your swap and withdrawal instructions to third-party protocols (Privy and LI.FI).</li>
           <li>Display your balances and transaction history.</li>
           <li>Send gas price alert notifications you have configured.</li>
-          <li>Process referral rewards and gas gift features.</li>
+          <li>Process referral and gas gift features.</li>
           <li>Monitor for abuse, fraud, and security incidents.</li>
         </ul>
       </Section>

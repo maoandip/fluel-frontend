@@ -208,7 +208,7 @@ export default function HowItWorks() {
           <div class={s.feeRow}><span>$10 – $100</span><span class={s.feeValue}>1.5%</span></div>
           <div class={s.feeRow}><span>$100 – $500</span><span class={s.feeValue}>1.0%</span></div>
           <div class={s.feeRow}><span>$500+</span><span class={s.feeValue}>0.75%</span></div>
-          <div class={`${s.feeRow} ${s.feeHighlight}`}><span>First swap via referral</span><span class={s.feeValue}>Free</span></div>
+          <div class={`${s.feeRow} ${s.feeHighlight}`}><span>First swap via referral (up to $50)</span><span class={s.feeValue}>Free</span></div>
         </div>
         <p class={s.feeNote}>Minimum fee: $0.10 per swap. Network gas costs and bridge fees (set by Li.Fi, not Fluel) are shown separately in the quote.</p>
 

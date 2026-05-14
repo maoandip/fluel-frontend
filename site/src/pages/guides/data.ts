@@ -36,7 +36,7 @@ export const guides: Guide[] = [
       },
       {
         heading: "Fees",
-        body: "Transparent, volume-based pricing. $0–10: 2.5%. $10–100: 1.5%. $100–500: 1.0%. $500+: 0.75%. The exact fee is shown before you confirm. Your first swap is free if you join via a referral link."
+        body: "Transparent, volume-based pricing. $0–10: 2.5%. $10–100: 1.5%. $100–500: 1.0%. $500+: 0.75%. The exact fee is shown before you confirm. Your first swap is free (up to $50) if you join via a referral link."
       }
     ]
   },

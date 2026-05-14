@@ -208,8 +208,8 @@ export default function Landing() {
             </div>
             <div class={s.featCard}>
               <span class={s.featTitle}>Referrals</span>
-              <p class={s.featText}>Friends get a free first swap. You earn 20% of the Fluel service fee on their swaps.</p>
-              <p class={s.featLoss}>Never miss out on passive income.</p>
+              <p class={s.featText}>Share your link — friends get their first swap (up to $50) with zero Fluel fee.</p>
+              <p class={s.featLoss}>Never let a friend pay to get started.</p>
             </div>
           </div>
         </div>
