@@ -18,9 +18,11 @@ export default function RouteErrorFallback(props: Props) {
         ? `Please wait about ${sec}s and try again.`
         : "Please wait a moment and try again.";
     }
-    if (props.err instanceof Error) return props.err.message;
-    if (typeof props.err === "string") return props.err;
-    return "An unexpected error occurred.";
+    // ApiError messages were already cleaned server-side; show as-is.
+    // Anything else (frontend JS bug, schema-mismatch from valibot) gets a
+    // generic message so internal paths don't leak through the top-level boundary.
+    if (props.err instanceof ApiError) return props.err.message;
+    return "Something went wrong. Please try again. If it persists, contact contact@fluel.io.";
   };
 
   return (
