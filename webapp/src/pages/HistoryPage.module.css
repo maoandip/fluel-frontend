@@ -19,8 +19,8 @@
 .txItem {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  padding: 12px 0;
+  gap: 5px;
+  padding: 14px 0;
   border-bottom: 1px solid var(--c-border-subtle);
 }
 
@@ -32,6 +32,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 8px;
 }
 
 .txRoute {
@@ -39,10 +40,15 @@
   font-size: 14px;
   font-weight: 600;
   color: var(--c-text);
+  min-width: 0;
+}
+
+.txAmt {
+  color: var(--c-text);
 }
 
 .txArrow {
-  margin: 0 4px;
+  margin: 0 5px;
   color: var(--c-dim);
 }
 
@@ -70,21 +76,65 @@
   color: var(--c-dim);
 }
 
+.txMeta {
+  display: flex;
+  gap: 10px;
+  font-size: 11px;
+  color: var(--c-dim);
+}
+
+.txTool {
+  text-transform: capitalize;
+}
+
+.txActions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  margin-top: 1px;
+}
+
 .txHash {
   font-family: var(--font-mono);
   font-size: 11px;
   color: var(--c-muted);
-  text-decoration: none;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.txHash:hover {
-  text-decoration: underline;
+.txActionBtns {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
 }
 
-.txTool {
-  font-size: 11px;
-  color: var(--c-dim);
-  text-transform: capitalize;
+.iconBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  background: rgba(0, 255, 178, .06);
+  border: 1px solid var(--c-border);
+  border-radius: 4px;
+  color: var(--c-muted);
+  cursor: pointer;
+  transition: color .15s, border-color .15s, background .15s;
+  -webkit-tap-highlight-color: transparent;
+  padding: 0;
+}
+
+.iconBtn:hover {
+  color: var(--c-accent);
+  border-color: rgba(0, 255, 178, .2);
+}
+
+.iconBtn:active {
+  color: var(--c-accent);
+  background: rgba(0, 255, 178, .12);
+  border-color: rgba(0, 255, 178, .3);
 }
 
 .loadingMore {
