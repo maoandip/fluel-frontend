@@ -76,6 +76,14 @@ const BalancesPage: Component = () => {
     return { total, count };
   });
 
+  const withdrawLabel = () => {
+    if (withdrawing()) return "Withdrawing...";
+    const { count, total } = selected();
+    if (count === 0) return "Withdraw all";
+    if (count === 1) return `Withdraw $${total.toFixed(2)}`;
+    return `Withdraw $${total.toFixed(2)} from ${count} chains`;
+  };
+
   function formatUsd(token: TokenBalance, human: number): string {
     const price = parseFloat(token.priceUSD);
     if (!price || price <= 0) return "";
@@ -205,11 +213,7 @@ const BalancesPage: Component = () => {
             onClick={handleWithdraw}
             disabled={withdrawing()}
           >
-            {withdrawing()
-              ? "Withdrawing..."
-              : selected().count > 0
-                ? `Withdraw $${selected().total.toFixed(2)} from ${selected().count} chain${selected().count > 1 ? "s" : ""}`
-                : "Withdraw all"}
+            {withdrawLabel()}
           </button>
           <div class={s.withdrawHint}>
             Sends to {destinationAddress().slice(0, 6)}...{destinationAddress().slice(-4)}
