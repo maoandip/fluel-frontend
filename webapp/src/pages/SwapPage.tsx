@@ -86,9 +86,12 @@ const SwapPage: Component = () => {
       urlChainConsumed = true;
     }
 
+    // Clear a stale selection only if the chain no longer exists. A same-chain
+    // selection is left intact — it's a valid swap. The defaults below still
+    // seed *different* from/to chains for a fresh user.
     if (pay.length > 0) {
       const cur = fromChain();
-      if (cur && (!pay.some((c) => c.name === cur) || cur === toChain())) setFromChain("");
+      if (cur && !pay.some((c) => c.name === cur)) setFromChain("");
       if (!fromChain()) {
         const to = toChain();
         const match = DEFAULT_FROM.find((name) => name !== to && pay.some((c) => c.name === name));
@@ -97,7 +100,7 @@ const SwapPage: Component = () => {
     }
     if (recv.length > 0) {
       const cur = toChain();
-      if (cur && (!recv.some((c) => c.name === cur) || cur === fromChain())) setToChain("");
+      if (cur && !recv.some((c) => c.name === cur)) setToChain("");
       if (!toChain()) {
         const from = fromChain();
         const match = DEFAULT_TO.find((name) => name !== from && recv.some((c) => c.name === name));
@@ -138,9 +141,11 @@ const SwapPage: Component = () => {
     return human > 0 ? String(human) : undefined;
   });
 
+  // Same-chain swaps are allowed (e.g. USDC -> native gas on one chain) —
+  // LI.FI treats them as a plain DEX swap. Only require both chains + amount.
   const canQuote = createMemo(() => {
     const a = parseFloat(amount());
-    return fromChain() && toChain() && fromChain() !== toChain() && a > 0;
+    return fromChain() && toChain() && a > 0;
   });
 
   function startQuoteAge() {
