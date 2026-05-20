@@ -22,7 +22,7 @@ export default function RouteErrorFallback(props: Props) {
     // Anything else (frontend JS bug, schema-mismatch from valibot) gets a
     // generic message so internal paths don't leak through the top-level boundary.
     if (props.err instanceof ApiError) return props.err.message;
-    return "Something went wrong. Please try again. If it persists, contact contact@fluel.io.";
+    return "Something went wrong. Please try again. If it persists, email us at contact@fluel.io.";
   };
 
   return (

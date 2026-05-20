@@ -158,6 +158,9 @@ export const AlertDeleteResponseSchema = v.object({
 // `enabled` is stored as INTEGER (0/1) in SQLite, so it comes across as a
 // number, not a boolean — don't "fix" this without also changing the backend.
 
+// The maxPerDay..lastFailureNotifiedAt fields are optional-with-default so a
+// frontend deployed ahead of the backend degrades gracefully instead of
+// hard-failing validation. Once the backend catches up, real values flow.
 const AutoRefillSchema = v.object({
   id: v.number(),
   userId: v.number(),
@@ -170,11 +173,11 @@ const AutoRefillSchema = v.object({
   enabled: v.number(),
   lastTriggeredAt: v.number(),
   createdAt: v.number(),
-  maxPerDay: v.number(),
-  cooldownMinutes: v.number(),
-  firesToday: v.number(),
-  firesTodayDate: v.number(),
-  lastFailureNotifiedAt: v.number(),
+  maxPerDay: v.optional(v.number(), 10),
+  cooldownMinutes: v.optional(v.number(), 30),
+  firesToday: v.optional(v.number(), 0),
+  firesTodayDate: v.optional(v.number(), 0),
+  lastFailureNotifiedAt: v.optional(v.number(), 0),
 });
 
 export const RefillListResponseSchema = v.object({
@@ -217,7 +220,8 @@ const GiftSchema = v.object({
   txHash: v.nullable(v.string()),
   createdAt: v.number(),
   claimedAt: v.nullable(v.number()),
-  claimLink: v.string(),
+  // Optional-with-default — tolerates a backend that predates the claimLink field.
+  claimLink: v.optional(v.string(), ""),
   senderDestination: v.nullish(v.string()),
 });
 
