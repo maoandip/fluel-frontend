@@ -1,5 +1,5 @@
 import { Component, Show, Suspense, ErrorBoundary, createSignal, createEffect, onMount, lazy, type JSX } from "solid-js";
-import { Router, Route } from "@solidjs/router";
+import { Router, Route, useLocation } from "@solidjs/router";
 import { AppProvider, useApp } from "./stores/app";
 import Toast from "./components/ui/Toast";
 import TabLayout from "./components/layout/TabLayout";
@@ -22,6 +22,8 @@ const HistoryPage = lazy(() => import("./pages/HistoryPage"));
 const AutomatePage = lazy(() => import("./pages/AutomatePage"));
 const InvitePage = lazy(() => import("./pages/InvitePage"));
 
+const TAB_PATHS = ["/", "/balance", "/history", "/automate", "/invite"];
+
 const Splash = (props: { fadeOut?: boolean }) => (
   <div class={`${splash.screen} ${props.fadeOut ? splash.out : ""}`}>
     <div class={splash.glow} />
@@ -39,9 +41,44 @@ const Splash = (props: { fadeOut?: boolean }) => (
   </div>
 );
 
-// AppContent wraps route children with splash + TabLayout + error/suspense
-// boundaries. The route children (matched route component) are the tab
-// content, slotted into TabLayout's content area.
+// Keep-alive tab host. A single catch-all route renders this once; it never
+// unmounts. Each tab's page is mounted the first time that tab is opened and
+// then kept in the tree — switching tabs just flips CSS visibility, so scroll
+// position, form inputs, and in-flight state survive a switch.
+const TabHost: Component = () => {
+  const location = useLocation();
+  const activePath = () => (TAB_PATHS.includes(location.pathname) ? location.pathname : "/");
+
+  const [mounted, setMounted] = createSignal<Set<string>>(new Set([activePath()]));
+  createEffect(() => {
+    const p = activePath();
+    if (!mounted().has(p)) setMounted((prev) => new Set(prev).add(p));
+  });
+
+  const panel = (path: string, Page: Component) => (
+    <Show when={mounted().has(path)}>
+      <div style={{ display: activePath() === path ? undefined : "none" }}>
+        <ErrorBoundary fallback={(err, reset) => <RouteErrorFallback err={err} reset={reset} />}>
+          <Suspense fallback={<div class={splash.suspense}><Skeleton rows={5} /></div>}>
+            <Page />
+          </Suspense>
+        </ErrorBoundary>
+      </div>
+    </Show>
+  );
+
+  return (
+    <TabLayout>
+      {panel("/", SwapPage)}
+      {panel("/balance", BalancesPage)}
+      {panel("/history", HistoryPage)}
+      {panel("/automate", AutomatePage)}
+      {panel("/invite", InvitePage)}
+    </TabLayout>
+  );
+};
+
+// AppContent gates the tab host behind the splash until the app is ready.
 const AppContent: Component<{ children?: JSX.Element }> = (props) => {
   const { isReady } = useApp();
   const [showSplash, setShowSplash] = createSignal(true);
@@ -55,7 +92,7 @@ const AppContent: Component<{ children?: JSX.Element }> = (props) => {
   });
 
   // Warm the lazy route chunks during idle time so the first switch to a
-  // tab doesn't pay a network fetch (the main source of tab-switch lag).
+  // tab doesn't pay a network fetch.
   onMount(() => {
     const warm = () => {
       BalancesPage.preload();
@@ -74,21 +111,14 @@ const AppContent: Component<{ children?: JSX.Element }> = (props) => {
         <Splash fadeOut={fadeOut()} />
       </Show>
       <Show when={isReady()}>
-        <TabLayout>
-          <ErrorBoundary fallback={(err, reset) => <RouteErrorFallback err={err} reset={reset} />}>
-            <Suspense fallback={<div class={splash.suspense}><Skeleton rows={5} /></div>}>
-              {props.children}
-            </Suspense>
-          </ErrorBoundary>
-        </TabLayout>
+        {props.children}
       </Show>
       <Toast />
     </>
   );
 };
 
-// Router shell — chooses between the beta gate and the real app, and
-// wraps route children in the app provider + splash + tab layout.
+// Router shell — chooses between the beta gate and the real app.
 const AppShell: Component<{ children?: JSX.Element }> = (props) => (
   <Show
     when={BETA_MODE && !isTester()}
@@ -102,15 +132,12 @@ const AppShell: Component<{ children?: JSX.Element }> = (props) => (
   </Show>
 );
 
+// One catch-all route: the tab host owns all five tabs and stays mounted.
+// The URL still changes per tab (back button, deep links keep working) —
+// it just no longer drives mount/unmount.
 const App: Component = () => (
   <Router root={AppShell}>
-    <Route path="/"         component={SwapPage} />
-    <Route path="/balance"  component={BalancesPage} />
-    <Route path="/history"  component={HistoryPage} />
-    <Route path="/automate" component={AutomatePage} />
-    <Route path="/invite"   component={InvitePage} />
-    {/* Fallback: any unknown path lands on the swap page */}
-    <Route path="*"         component={SwapPage} />
+    <Route path="*" component={TabHost} />
   </Router>
 );
 
