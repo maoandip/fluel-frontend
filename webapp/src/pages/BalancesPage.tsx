@@ -36,7 +36,8 @@ const BalancesPage: Component = () => {
 
   function toggleChain(chainId: number) {
     const next = new Set(selectedChains());
-    next.has(chainId) ? next.delete(chainId) : next.add(chainId);
+    if (next.has(chainId)) next.delete(chainId);
+    else next.add(chainId);
     setSelectedChains(next);
     haptic("selection");
   }
@@ -145,13 +146,15 @@ const BalancesPage: Component = () => {
             {(row) => {
               const chain = getChain(row.chainId);
               const usd = formatUsd(row.token, row.human);
-              const selectable = isUsdc(row.token) && !!destinationAddress();
+              // Accessor, not a const — destinationAddress() can change while
+              // the page is open (set via WalletBar), and rows must react.
+              const selectable = () => isUsdc(row.token) && !!destinationAddress();
               return (
                 <div
-                  class={`${s.item} ${selectable ? s.itemSelectable : ""}`}
-                  onClick={selectable ? () => toggleChain(row.chainId) : undefined}
+                  class={`${s.item} ${selectable() ? s.itemSelectable : ""}`}
+                  onClick={() => { if (selectable()) toggleChain(row.chainId); }}
                 >
-                  <Show when={selectable}>
+                  <Show when={selectable()}>
                     <input
                       type="checkbox"
                       class={s.checkbox}
