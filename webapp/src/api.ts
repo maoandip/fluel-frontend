@@ -337,12 +337,14 @@ export interface WithdrawResult {
   symbol: string;
 }
 
-export function postWithdraw(chain?: string) {
+// No args → withdraw every chain with a balance. With chains → withdraw only
+// that subset. The backend does it in one request, one on-chain tx per chain.
+export function postWithdraw(chains?: string[]) {
   return api(
     "/api/withdraw",
     {
       method: "POST",
-      body: JSON.stringify(chain ? { chain } : {}),
+      body: JSON.stringify(chains && chains.length > 0 ? { chains } : {}),
     },
     WithdrawResponseSchema,
   ) as Promise<{ withdrawals: WithdrawResult[] }>;

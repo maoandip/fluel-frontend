@@ -22,10 +22,26 @@
   border-bottom: none;
 }
 
+.itemSelectable {
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.checkbox {
+  width: 18px;
+  height: 18px;
+  margin-right: 12px;
+  flex-shrink: 0;
+  accent-color: var(--c-accent);
+  cursor: pointer;
+}
+
 .chain {
   display: flex;
   align-items: flex-start;
   gap: 10px;
+  flex: 1;
+  min-width: 0;
 }
 
 .chainInfo {

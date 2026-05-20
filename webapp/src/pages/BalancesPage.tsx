@@ -30,6 +30,16 @@ const BalancesPage: Component = () => {
   const getChain = (chainId: number) => chains().find((c) => c.id === chainId);
 
   const [withdrawing, setWithdrawing] = createSignal(false);
+  const [selectedChains, setSelectedChains] = createSignal<Set<number>>(new Set());
+
+  const isUsdc = (token: TokenBalance) => token.address.toLowerCase() !== NATIVE_TOKEN;
+
+  function toggleChain(chainId: number) {
+    const next = new Set(selectedChains());
+    next.has(chainId) ? next.delete(chainId) : next.add(chainId);
+    setSelectedChains(next);
+    haptic("selection");
+  }
 
   const rows = createMemo((): DisplayRow[] => {
     const data = balances()?.balances;
@@ -49,9 +59,20 @@ const BalancesPage: Component = () => {
   const usdcSummary = createMemo(() => {
     let total = 0;
     for (const r of rows()) {
-      if (r.token.address.toLowerCase() !== NATIVE_TOKEN) total += r.human;
+      if (isUsdc(r.token)) total += r.human;
     }
     return { hasUsdc: total > 0, totalUsdc: total };
+  });
+
+  // USD total + count of currently-selected USDC rows. Recomputed against the
+  // live row list so a stale selection (chain withdrawn elsewhere) drops out.
+  const selected = createMemo(() => {
+    const sel = selectedChains();
+    let total = 0, count = 0;
+    for (const r of rows()) {
+      if (isUsdc(r.token) && sel.has(r.chainId)) { total += r.human; count++; }
+    }
+    return { total, count };
   });
 
   function formatUsd(token: TokenBalance, human: number): string {
@@ -70,18 +91,27 @@ const BalancesPage: Component = () => {
     return chain?.stableIcon;
   }
 
-  async function handleWithdrawAll() {
+  async function handleWithdraw() {
     if (!destinationAddress()) {
       showToast("Set a destination wallet first");
       haptic("error");
       return;
     }
+    // No selection → withdraw everything. Otherwise → only the picked chains.
+    const sel = selectedChains();
+    const chainNames = sel.size > 0
+      ? rows()
+          .filter((r) => isUsdc(r.token) && sel.has(r.chainId))
+          .map((r) => getChain(r.chainId)?.name)
+          .filter((n): n is string => !!n)
+      : undefined;
     setWithdrawing(true);
     try {
-      const res = await postWithdraw();
+      const res = await postWithdraw(chainNames);
       const summary = res.withdrawals.map(w => `${w.amount} ${w.symbol} on ${w.chainName}`).join(", ");
       haptic("success");
       showToast(`Withdrawn: ${summary}`);
+      setSelectedChains(new Set<number>());
       refetchBalances();
     } catch (err: any) {
       showToast(err.message || "Withdraw failed");
@@ -115,8 +145,22 @@ const BalancesPage: Component = () => {
             {(row) => {
               const chain = getChain(row.chainId);
               const usd = formatUsd(row.token, row.human);
+              const selectable = isUsdc(row.token) && !!destinationAddress();
               return (
-                <div class={s.item}>
+                <div
+                  class={`${s.item} ${selectable ? s.itemSelectable : ""}`}
+                  onClick={selectable ? () => toggleChain(row.chainId) : undefined}
+                >
+                  <Show when={selectable}>
+                    <input
+                      type="checkbox"
+                      class={s.checkbox}
+                      checked={selectedChains().has(row.chainId)}
+                      onClick={(e) => e.stopPropagation()}
+                      onChange={() => toggleChain(row.chainId)}
+                      aria-label={`Select ${chain?.name ?? "chain"} for withdrawal`}
+                    />
+                  </Show>
                   <div class={s.chain}>
                     <TokenChainIcon
                       tokenIcon={tokenIcon(row)}
@@ -151,14 +195,18 @@ const BalancesPage: Component = () => {
           </Show>
         </div>
 
-        {/* Withdraw */}
+        {/* Withdraw — withdraws the checked chains, or all USDC if none checked */}
         <Show when={usdcSummary().hasUsdc && destinationAddress()}>
           <button
             class={s.withdrawBtn}
-            onClick={handleWithdrawAll}
+            onClick={handleWithdraw}
             disabled={withdrawing()}
           >
-            {withdrawing() ? "Withdrawing..." : "Withdraw all USDC"}
+            {withdrawing()
+              ? "Withdrawing..."
+              : selected().count > 0
+                ? `Withdraw $${selected().total.toFixed(2)} from ${selected().count} chain${selected().count > 1 ? "s" : ""}`
+                : "Withdraw all USDC"}
           </button>
           <div class={s.withdrawHint}>
             Sends to {destinationAddress().slice(0, 6)}...{destinationAddress().slice(-4)}
