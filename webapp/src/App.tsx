@@ -1,4 +1,4 @@
-import { Component, Show, Suspense, ErrorBoundary, createSignal, createEffect, lazy, type JSX } from "solid-js";
+import { Component, Show, Suspense, ErrorBoundary, createSignal, createEffect, onMount, lazy, type JSX } from "solid-js";
 import { Router, Route } from "@solidjs/router";
 import { AppProvider, useApp } from "./stores/app";
 import Toast from "./components/ui/Toast";
@@ -52,6 +52,19 @@ const AppContent: Component<{ children?: JSX.Element }> = (props) => {
       setFadeOut(true);
       setTimeout(() => setShowSplash(false), 400);
     }
+  });
+
+  // Warm the lazy route chunks during idle time so the first switch to a
+  // tab doesn't pay a network fetch (the main source of tab-switch lag).
+  onMount(() => {
+    const warm = () => {
+      BalancesPage.preload();
+      HistoryPage.preload();
+      AutomatePage.preload();
+      InvitePage.preload();
+    };
+    if ("requestIdleCallback" in window) requestIdleCallback(warm);
+    else setTimeout(warm, 2000);
   });
 
   return (
