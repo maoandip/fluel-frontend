@@ -79,9 +79,7 @@ const BalancesPage: Component = () => {
   const withdrawLabel = () => {
     if (withdrawing()) return "Withdrawing...";
     const { count, total } = selected();
-    if (count === 0) return "Withdraw all";
-    if (count === 1) return `Withdraw $${total.toFixed(2)}`;
-    return `Withdraw $${total.toFixed(2)} from ${count} chains`;
+    return count === 0 ? "Withdraw all" : `Withdraw $${total.toFixed(2)}`;
   };
 
   function formatUsd(token: TokenBalance, human: number): string {
