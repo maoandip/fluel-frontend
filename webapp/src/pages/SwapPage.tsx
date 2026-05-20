@@ -224,7 +224,7 @@ const SwapPage: Component = () => {
           send({ type: "STATUS_DONE" });
           haptic("success");
           refetchBalances();
-          revalidate("lifiHistory");
+          revalidate("history");
           return;
         }
         if (FAILED_TX_STATUSES.has(st)) {
@@ -254,7 +254,7 @@ const SwapPage: Component = () => {
           send({ type: "STATUS_DONE", message: msg });
           haptic("success");
           refetchBalances();
-          revalidate("lifiHistory");
+          revalidate("history");
           return;
         }
         if (st === "failed") {

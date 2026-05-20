@@ -2,17 +2,19 @@ import { describe, it, expect } from "vitest";
 import { txStatusClass, giftStatusClass } from "./status";
 
 describe("txStatusClass", () => {
-  it("maps known statuses to their class", () => {
-    expect(txStatusClass("DONE")).toBe("statusDone");
-    expect(txStatusClass("PENDING")).toBe("statusPending");
-    expect(txStatusClass("FAILED")).toBe("statusFailed");
-    expect(txStatusClass("NOT_FOUND")).toBe("statusFailed");
+  it("maps tx_history statuses to their class", () => {
+    expect(txStatusClass("confirmed")).toBe("statusDone");
+    expect(txStatusClass("pending")).toBe("statusPending");
+    expect(txStatusClass("submitting")).toBe("statusPending");
+    expect(txStatusClass("broadcasted")).toBe("statusPending");
+    expect(txStatusClass("reverted")).toBe("statusFailed");
+    expect(txStatusClass("failed")).toBe("statusFailed");
+    expect(txStatusClass("error")).toBe("statusFailed");
   });
 
   it("falls back to unknown for unrecognized statuses", () => {
     expect(txStatusClass("")).toBe("statusUnknown");
     expect(txStatusClass("UNKNOWN")).toBe("statusUnknown");
-    expect(txStatusClass("done")).toBe("statusUnknown"); // case-sensitive
   });
 });
 

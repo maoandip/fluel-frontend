@@ -1,13 +1,17 @@
 // Pure helpers mapping backend status strings to CSS module class names.
 
+// Maps a tx_history TxStatus to a CSS module class.
 export function txStatusClass(status: string): "statusDone" | "statusPending" | "statusFailed" | "statusUnknown" {
   switch (status) {
-    case "DONE":
+    case "confirmed":
       return "statusDone";
-    case "PENDING":
+    case "submitting":
+    case "pending":
+    case "broadcasted":
       return "statusPending";
-    case "FAILED":
-    case "NOT_FOUND":
+    case "reverted":
+    case "failed":
+    case "error":
       return "statusFailed";
     default:
       return "statusUnknown";

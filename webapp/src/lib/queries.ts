@@ -8,7 +8,7 @@ import {
   getRefills,
   getReferralStats,
   getGifts,
-  getLifiHistory,
+  getHistory,
 } from "../api";
 
 // Cached async queries. Solid Router's query() memoizes by call arguments
@@ -24,8 +24,8 @@ export const queries = {
   refills: query(async () => (await getRefills()).refills, "refills"),
   referralStats: query(() => getReferralStats(), "referralStats"),
   gifts: query(async () => (await getGifts()).gifts, "gifts"),
-  lifiHistory: query(
-    (page: number, pageSize: number) => getLifiHistory(page, pageSize),
-    "lifiHistory",
+  history: query(
+    (page: number, pageSize: number) => getHistory(page, pageSize),
+    "history",
   ),
 };

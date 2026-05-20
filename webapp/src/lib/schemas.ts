@@ -247,13 +247,25 @@ export const WithdrawResponseSchema = v.object({
   withdrawals: v.array(WithdrawResultSchema),
 });
 
-// ── LI.FI history ──────────────────────────────────────────────────
-// This endpoint is a pass-through from LI.FI's /analytics/transfers. Their
-// shape is large and evolving, so we validate only the top-level envelope
-// — `transfers` must be an array — and let the inner objects flow through
-// typed by the LifiTransfer interface in api.ts. A stricter schema would
-// drift every time LI.FI adds a field.
+// ── Transaction history ────────────────────────────────────────────
+// fluel's own tx_history ledger — every swap and withdrawal, recorded the
+// moment it is submitted. nullable fields are absent on rows that failed
+// before those values were known.
 
-export const LifiHistoryResponseSchema = v.object({
-  transfers: v.array(v.unknown()),
+const HistoryTxSchema = v.object({
+  txHash: v.string(),
+  type: v.string(),
+  fromChain: v.nullable(v.string()),
+  toChain: v.nullable(v.string()),
+  fromAmount: v.nullable(v.string()),
+  toAmount: v.nullable(v.string()),
+  toToken: v.nullable(v.string()),
+  tool: v.nullable(v.string()),
+  feeUsd: v.nullable(v.string()),
+  status: v.string(),
+  createdAt: v.number(),
+});
+
+export const HistoryResponseSchema = v.object({
+  transactions: v.array(HistoryTxSchema),
 });

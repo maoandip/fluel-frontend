@@ -27,7 +27,7 @@ import {
   GiftListResponseSchema,
   GiftCreateResponseSchema,
   WithdrawResponseSchema,
-  LifiHistoryResponseSchema,
+  HistoryResponseSchema,
 } from "./lib/schemas";
 
 // ── Fetch wrapper ──────────────────────────────────────────────────
@@ -192,52 +192,29 @@ export function getSwapStatus(txHash: string, waitSec = 0, signal?: AbortSignal)
   );
 }
 
-// ── LI.FI history ──────────────────────────────────────────────────
+// ── Transaction history ────────────────────────────────────────────
 
-export interface LifiToken {
-  address: string;
-  chainId: number;
-  symbol: string;
-  decimals: number;
-  name: string;
-  logoURI?: string;
-  priceUSD?: string;
-}
-
-export interface LifiTransferStep {
+// A row from fluel's own tx_history ledger — see /api/history.
+export interface HistoryTx {
   txHash: string;
-  txLink: string;
-  token: LifiToken;
-  chainId: number;
-  amount: string;
-  amountUSD: string;
-  gasAmountUSD?: string;
-  timestamp: number;
-}
-
-export interface LifiTransfer {
-  transactionId: string;
-  sending: LifiTransferStep;
-  receiving: LifiTransferStep;
-  lifiExplorerLink: string;
-  fromAddress: string;
-  toAddress: string;
-  tool: string;
+  type: string; // "swap" | "withdraw"
+  fromChain: string | null;
+  toChain: string | null;
+  fromAmount: string | null;
+  toAmount: string | null;
+  toToken: string | null;
+  tool: string | null;
+  feeUsd: string | null;
   status: string;
-  substatus?: string;
-  substatusMessage?: string;
+  createdAt: number;
 }
 
-export interface LifiHistoryResponse {
-  transfers: LifiTransfer[];
-}
-
-export function getLifiHistory(page = 1, pageSize = 20) {
-  // The schema only validates the envelope — LI.FI transfer inner shapes
-  // change over time and are consumed loosely by HistoryPage. The cast is
-  // safe because LifiHistoryResponseSchema confirms `transfers` is an array;
-  // element typing is enforced by TS at the call site via LifiTransfer.
-  return api("/api/lifi-history?page=" + page + "&pageSize=" + pageSize, {}, LifiHistoryResponseSchema) as Promise<LifiHistoryResponse>;
+export function getHistory(page = 1, pageSize = 20) {
+  return api(
+    `/api/history?page=${page}&pageSize=${pageSize}`,
+    {},
+    HistoryResponseSchema,
+  ) as Promise<{ transactions: HistoryTx[] }>;
 }
 
 // ── Gas prices ─────────────────────────────────────────────────────

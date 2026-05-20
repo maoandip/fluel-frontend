@@ -1,8 +1,7 @@
-import { Component, Show, For, createSignal, createMemo, onMount, onCleanup } from "solid-js";
+import { Component, Show, For, createSignal, onMount, onCleanup } from "solid-js";
 import { revalidate } from "@solidjs/router";
-import type { LifiTransfer } from "../api";
+import type { HistoryTx } from "../api";
 import { queries } from "../lib/queries";
-import { useApp } from "../stores/app";
 import EmptyState from "../components/ui/EmptyState";
 import Skeleton from "../components/ui/Skeleton";
 import QueryErrorFallback from "../components/ui/QueryErrorFallback";
@@ -13,20 +12,7 @@ import s from "./HistoryPage.module.css";
 const PAGE_SIZE = 20;
 
 const HistoryPage: Component = () => {
-  const { chains, receiveChains } = useApp();
-
-  const chainNameById = createMemo(() => {
-    const map = new Map<number, string>();
-    for (const c of chains()) map.set(c.id, c.name);
-    for (const c of receiveChains()) if (!map.has(c.id)) map.set(c.id, c.name);
-    return map;
-  });
-
-  function chainName(id: number): string {
-    return chainNameById().get(id) ?? `#${id}`;
-  }
-
-  const [transfers, setTransfers] = createSignal<LifiTransfer[]>([]);
+  const [txs, setTxs] = createSignal<HistoryTx[]>([]);
   const [loading, setLoading] = createSignal(true);
   const [loadingMore, setLoadingMore] = createSignal(false);
   const [hasMore, setHasMore] = createSignal(true);
@@ -39,13 +25,13 @@ const HistoryPage: Component = () => {
 
   async function loadPage(p: number) {
     try {
-      const res = await queries.lifiHistory(p, PAGE_SIZE);
+      const res = await queries.history(p, PAGE_SIZE);
       if (!alive) return;
-      const items = res.transfers ?? [];
+      const items = res.transactions ?? [];
       if (p === 1) {
-        setTransfers(items);
+        setTxs(items);
       } else {
-        setTransfers((prev) => [...prev, ...items]);
+        setTxs((prev) => [...prev, ...items]);
       }
       setHasMore(items.length >= PAGE_SIZE);
     } catch (err) {
@@ -64,7 +50,7 @@ const HistoryPage: Component = () => {
     setLoading(true);
     setPage(1);
     setHasMore(true);
-    revalidate("lifiHistory");
+    revalidate("history");
     await loadPage(1);
     if (alive) setLoading(false);
   }
@@ -91,10 +77,13 @@ const HistoryPage: Component = () => {
 
   function statusLabel(status: string): string {
     switch (status) {
-      case "DONE": return "Done";
-      case "PENDING": return "Pending";
-      case "FAILED": return "Failed";
-      case "NOT_FOUND": return "Not found";
+      case "confirmed": return "Done";
+      case "pending":
+      case "submitting":
+      case "broadcasted": return "Pending";
+      case "reverted": return "Reverted";
+      case "failed":
+      case "error": return "Failed";
       default: return status;
     }
   }
@@ -119,24 +108,27 @@ const HistoryPage: Component = () => {
         />
       </Show>
 
-      <Show when={!loading() && !error() && transfers().length === 0}>
+      <Show when={!loading() && !error() && txs().length === 0}>
         <EmptyState
           icon={<span>&#128203;</span>}
           message="No swaps yet"
-          hint="Your LI.FI swap history will appear here."
+          hint="Your swaps and withdrawals will appear here."
         />
       </Show>
 
-      <Show when={!loading() && !error() && transfers().length > 0}>
+      <Show when={!loading() && !error() && txs().length > 0}>
         <div class={s.list} onScroll={onScroll}>
-          <For each={transfers()}>
+          <For each={txs()}>
             {(tx) => (
               <div class={s.txItem}>
                 <div class={s.txTopRow}>
                   <span class={s.txRoute}>
-                    {tx.sending.token.symbol}
-                    <span class={s.txArrow}>&rarr;</span>
-                    {tx.receiving.token.symbol}
+                    <Show
+                      when={tx.type === "withdraw"}
+                      fallback={<>USDC<span class={s.txArrow}>&rarr;</span>{tx.toToken ?? "gas"}</>}
+                    >
+                      Withdraw USDC
+                    </Show>
                   </span>
                   <span class={`${s.txStatus} ${s[txStatusClass(tx.status)]}`}>
                     {statusLabel(tx.status)}
@@ -144,21 +136,20 @@ const HistoryPage: Component = () => {
                 </div>
                 <div class={s.txBottomRow}>
                   <span class={s.txChains}>
-                    {chainName(tx.sending.chainId)} &rarr; {chainName(tx.receiving.chainId)}
+                    <Show
+                      when={tx.type === "withdraw"}
+                      fallback={<>{tx.fromChain ?? "—"} &rarr; {tx.toChain ?? "—"}</>}
+                    >
+                      {tx.fromChain ?? "—"}
+                    </Show>
                   </span>
-                  <span class={s.txTime}>{timeAgo(tx.sending.timestamp)}</span>
+                  <span class={s.txTime}>{timeAgo(tx.createdAt)}</span>
                 </div>
                 <div class={s.txBottomRow}>
-                  <a
-                    class={s.txHash}
-                    href={tx.sending.txLink}
-                    target="_blank"
-                    rel="noopener"
-                    title={tx.sending.txHash}
-                  >
-                    {truncHash(tx.sending.txHash)}
-                  </a>
-                  <span class={s.txTool}>{tx.tool}</span>
+                  <span class={s.txHash} title={tx.txHash}>{truncHash(tx.txHash)}</span>
+                  <Show when={tx.tool}>
+                    <span class={s.txTool}>{tx.tool}</span>
+                  </Show>
                 </div>
               </div>
             )}
@@ -166,8 +157,8 @@ const HistoryPage: Component = () => {
           <Show when={loadingMore()}>
             <div class={s.loadingMore}>Loading...</div>
           </Show>
-          <Show when={!hasMore() && transfers().length > 0}>
-            <div class={s.endMarker}>No more swaps</div>
+          <Show when={!hasMore() && txs().length > 0}>
+            <div class={s.endMarker}>No more transactions</div>
           </Show>
         </div>
       </Show>
