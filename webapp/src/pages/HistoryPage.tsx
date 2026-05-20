@@ -9,11 +9,14 @@ import EmptyState from "../components/ui/EmptyState";
 import Skeleton from "../components/ui/Skeleton";
 import QueryErrorFallback from "../components/ui/QueryErrorFallback";
 import { txStatusClass } from "../lib/status";
-import { timeAgo } from "../lib/format";
+import { timeAgo, dateBucket } from "../lib/format";
 import { explorerTxUrl } from "../lib/explorers";
 import s from "./HistoryPage.module.css";
 
 const PAGE_SIZE = 20;
+// Hard ceiling on accumulated rows — infinite scroll stops here so the DOM
+// can't grow without bound on a very long history.
+const MAX_TXS = 200;
 const FAILED_STATUSES = new Set(["reverted", "failed", "error"]);
 
 const HistoryPage: Component = () => {
@@ -44,17 +47,27 @@ const HistoryPage: Component = () => {
       const res = await queries.history(p, PAGE_SIZE);
       if (!alive) return;
       const items = res.transactions ?? [];
-      if (p === 1) {
-        setTxs(items);
-      } else {
-        setTxs((prev) => [...prev, ...items]);
-      }
-      setHasMore(items.length >= PAGE_SIZE);
+      const merged = p === 1 ? items : [...txs(), ...items];
+      setTxs(merged);
+      setHasMore(items.length >= PAGE_SIZE && merged.length < MAX_TXS);
     } catch (err) {
       if (!alive) return;
       if (p === 1) setError(err);
     }
   }
+
+  // Rows grouped into date sections (Today / Yesterday / This week / month).
+  // txs() is already newest-first, so a section break is just a label change.
+  const sections = createMemo(() => {
+    const out: { label: string; items: HistoryTx[] }[] = [];
+    for (const tx of txs()) {
+      const label = dateBucket(tx.createdAt);
+      const last = out[out.length - 1];
+      if (last && last.label === label) last.items.push(tx);
+      else out.push({ label, items: [tx] });
+    }
+    return out;
+  });
 
   onMount(async () => {
     await loadPage(1);
@@ -147,81 +160,92 @@ const HistoryPage: Component = () => {
 
       <Show when={!loading() && !error() && txs().length > 0}>
         <div class={s.list} onScroll={onScroll}>
-          <For each={txs()}>
-            {(tx) => {
-              const failed = FAILED_STATUSES.has(tx.status);
-              const explorer = txExplorerUrl(tx);
-              return (
-                <div class={s.txItem}>
-                  {/* Headline: what moved + status */}
-                  <div class={s.txTopRow}>
-                    <span class={s.txRoute}>
-                      <Show
-                        when={tx.type === "withdraw"}
-                        fallback={
-                          <>
-                            <span class={s.txAmt}>{tx.fromAmount ?? "—"} USDC</span>
-                            <span class={s.txArrow}>&rarr;</span>
-                            <span class={s.txAmt}>{tx.toAmount ?? "—"} {tx.toToken ?? "gas"}</span>
-                          </>
-                        }
-                      >
-                        <span class={s.txAmt}>Withdraw {tx.fromAmount ?? ""} USDC</span>
-                      </Show>
-                    </span>
-                    <span class={`${s.txStatus} ${s[txStatusClass(tx.status)]}`}>
-                      {statusLabel(tx.status)}
-                    </span>
-                  </div>
+          <For each={sections()}>
+            {(section) => (
+              <>
+                <div class={s.sectionHeader}>{section.label}</div>
+                <For each={section.items}>
+                  {(tx) => {
+                    const failed = FAILED_STATUSES.has(tx.status);
+                    const explorer = txExplorerUrl(tx);
+                    return (
+                      <div class={s.txItem}>
+                        {/* Headline: what moved + status */}
+                        <div class={s.txTopRow}>
+                          <span class={s.txRoute}>
+                            <Show
+                              when={tx.type === "withdraw"}
+                              fallback={
+                                <>
+                                  <span class={s.txAmt}>{tx.fromAmount ?? "—"} USDC</span>
+                                  <span class={s.txArrow}>&rarr;</span>
+                                  <span class={s.txAmt}>{tx.toAmount ?? "—"} {tx.toToken ?? "gas"}</span>
+                                </>
+                              }
+                            >
+                              <span class={s.txAmt}>Withdraw {tx.fromAmount ?? ""} USDC</span>
+                            </Show>
+                          </span>
+                          <span class={`${s.txStatus} ${s[txStatusClass(tx.status)]}`}>
+                            {statusLabel(tx.status)}
+                          </span>
+                        </div>
 
-                  {/* Chain route + when */}
-                  <div class={s.txBottomRow}>
-                    <span class={s.txChains}>
-                      <Show
-                        when={tx.type === "withdraw"}
-                        fallback={<>{tx.fromChain ?? "—"} &rarr; {tx.toChain ?? "—"}</>}
-                      >
-                        {tx.fromChain ?? "—"}
-                      </Show>
-                    </span>
-                    <span class={s.txTime}>{timeAgo(tx.createdAt)}</span>
-                  </div>
+                        {/* Chain route + when */}
+                        <div class={s.txBottomRow}>
+                          <span class={s.txChains}>
+                            <Show
+                              when={tx.type === "withdraw"}
+                              fallback={<>{tx.fromChain ?? "—"} &rarr; {tx.toChain ?? "—"}</>}
+                            >
+                              {tx.fromChain ?? "—"}
+                            </Show>
+                          </span>
+                          <span class={s.txTime}>{timeAgo(tx.createdAt)}</span>
+                        </div>
 
-                  {/* Fee + routing tool, when known */}
-                  <Show when={(tx.feeUsd && tx.feeUsd !== "0") || (tx.tool && !failed)}>
-                    <div class={s.txMeta}>
-                      <Show when={tx.feeUsd && tx.feeUsd !== "0"}>
-                        <span>Fee ${tx.feeUsd}</span>
-                      </Show>
-                      <Show when={tx.tool && !failed}>
-                        <span class={s.txTool}>via {tx.tool}</span>
-                      </Show>
-                    </div>
-                  </Show>
+                        {/* Fee + routing tool, when known */}
+                        <Show when={(tx.feeUsd && tx.feeUsd !== "0") || (tx.tool && !failed)}>
+                          <div class={s.txMeta}>
+                            <Show when={tx.feeUsd && tx.feeUsd !== "0"}>
+                              <span>Fee ${tx.feeUsd}</span>
+                            </Show>
+                            <Show when={tx.tool && !failed}>
+                              <span class={s.txTool}>via {tx.tool}</span>
+                            </Show>
+                          </div>
+                        </Show>
 
-                  {/* Hash + trace actions */}
-                  <div class={s.txActions}>
-                    <span class={s.txHash} title={tx.txHash}>{truncHash(tx.txHash)}</span>
-                    <div class={s.txActionBtns}>
-                      <button class={s.iconBtn} onClick={() => copyHash(tx.txHash)} aria-label="Copy transaction hash">
-                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2" /><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" /></svg>
-                      </button>
-                      <Show when={explorer}>
-                        <a class={s.iconBtn} href={explorer!} target="_blank" rel="noopener" aria-label="View on block explorer">
-                          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" /><polyline points="15 3 21 3 21 9" /><line x1="10" y1="14" x2="21" y2="3" /></svg>
-                        </a>
-                      </Show>
-                    </div>
-                  </div>
-                </div>
-              );
-            }}
+                        {/* Hash + trace actions */}
+                        <div class={s.txActions}>
+                          <span class={s.txHash} title={tx.txHash}>{truncHash(tx.txHash)}</span>
+                          <div class={s.txActionBtns}>
+                            <button class={s.iconBtn} onClick={() => copyHash(tx.txHash)} aria-label="Copy transaction hash">
+                              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2" /><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" /></svg>
+                            </button>
+                            <Show when={explorer}>
+                              <a class={s.iconBtn} href={explorer!} target="_blank" rel="noopener" aria-label="View on block explorer">
+                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" /><polyline points="15 3 21 3 21 9" /><line x1="10" y1="14" x2="21" y2="3" /></svg>
+                              </a>
+                            </Show>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  }}
+                </For>
+              </>
+            )}
           </For>
           <Show when={loadingMore()}>
             <div class={s.loadingMore}>Loading...</div>
           </Show>
           <Show when={!hasMore() && txs().length > 0}>
-            <div class={s.endMarker}>No more transactions</div>
+            <div class={s.endMarker}>
+              {txs().length >= MAX_TXS
+                ? `Showing your ${MAX_TXS} most recent transactions`
+                : "No more transactions"}
+            </div>
           </Show>
         </div>
       </Show>

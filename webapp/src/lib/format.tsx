@@ -60,3 +60,16 @@ export function timeAgo(tsSeconds: number): string {
   if (days < 7) return `${days}d ago`;
   return new Date(tsSeconds * 1000).toLocaleDateString("en-US", { month: "short", day: "numeric" });
 }
+
+// Coarse date bucket for grouping a newest-first list: Today, Yesterday,
+// This week, then "Month YYYY" for anything older.
+export function dateBucket(tsSeconds: number): string {
+  const d = new Date(tsSeconds * 1000);
+  const now = new Date();
+  const startOf = (x: Date) => new Date(x.getFullYear(), x.getMonth(), x.getDate()).getTime();
+  const diffDays = Math.round((startOf(now) - startOf(d)) / 86400_000);
+  if (diffDays <= 0) return "Today";
+  if (diffDays === 1) return "Yesterday";
+  if (diffDays < 7) return "This week";
+  return d.toLocaleDateString("en-US", { month: "long", year: "numeric" });
+}
