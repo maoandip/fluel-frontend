@@ -206,7 +206,7 @@ const BalancesPage: Component = () => {
               ? "Withdrawing..."
               : selected().count > 0
                 ? `Withdraw $${selected().total.toFixed(2)} from ${selected().count} chain${selected().count > 1 ? "s" : ""}`
-                : "Withdraw all USDC"}
+                : "Withdraw all"}
           </button>
           <div class={s.withdrawHint}>
             Sends to {destinationAddress().slice(0, 6)}...{destinationAddress().slice(-4)}
