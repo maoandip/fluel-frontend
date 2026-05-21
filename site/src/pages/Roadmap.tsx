@@ -16,11 +16,11 @@ const phases: Phase[] = [
     status: "done",
     title: "EVM gas swaps",
     items: [
-      "Swap USDC to native gas on 60+ EVM chains",
+      "Swap USDC to native gas on 40+ EVM chains",
       "Telegram bot and mini-app",
       "Built-in wallet — no extensions or seed phrases",
       "Send gas directly to any wallet",
-      "Volume-based fee tiers ($0–10: 2.5% → $500+: 0.75%)",
+      "Volume-based fees with a $0.50 minimum per swap",
       "Gas price alerts and auto-refill",
       "Referral program — fee-free first swap for referred friends",
       "Gift gas via shareable links ($1–$25)",
@@ -41,9 +41,10 @@ const phases: Phase[] = [
   },
   {
     label: "Phase 3",
-    status: "current",
-    title: "Polish + growth",
+    status: "done",
+    title: "Public launch",
     items: [
+      "Open to everyone — no waitlist, no closed beta",
       "Fresh brand and visual refresh",
       "Smoother app experience",
       "Improved onboarding for new users",
