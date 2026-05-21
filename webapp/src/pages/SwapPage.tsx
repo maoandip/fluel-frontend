@@ -1,8 +1,9 @@
 import { Component, Show, createSignal, createMemo, createEffect, onCleanup } from "solid-js";
-import { createAsync, revalidate } from "@solidjs/router";
+import { createAsync } from "@solidjs/router";
 import { useMachine } from "@xstate/solid";
 import { useApp } from "../stores/app";
 import { balancesQuery, refetchBalances } from "../stores/balances";
+import { revalidateNow } from "../lib/refresh";
 import { showToast } from "../stores/toast";
 import { postQuote, postConfirm, getSwapStatus, getTxState } from "../api";
 import { haptic } from "../lib/telegram";
@@ -116,15 +117,27 @@ const SwapPage: Component = () => {
   let quoteAgeTimer: ReturnType<typeof setInterval> | undefined;
   let txStateAbort: AbortController | undefined;
   let statusAbort: AbortController | undefined;
+  let swapResultPollTimers: ReturnType<typeof setTimeout>[] = [];
 
   function stopTxStatePoll() { txStateAbort?.abort(); txStateAbort = undefined; }
   function stopStatusPoll() { statusAbort?.abort(); statusAbort = undefined; }
+
+  // Balance indexers/RPCs lag a freshly-settled swap, so a single refetch
+  // usually reads the pre-swap number. Revalidate balances + history a few
+  // times over ~25s to converge on the post-swap state.
+  function pollSwapResult() {
+    for (const t of swapResultPollTimers) clearTimeout(t);
+    swapResultPollTimers = [0, 4_000, 9_000, 16_000, 25_000].map((d) =>
+      setTimeout(() => { void revalidateNow(["balances", "history"]); }, d),
+    );
+  }
 
   onCleanup(() => {
     clearTimeout(debounceTimer);
     clearInterval(quoteAgeTimer);
     stopTxStatePoll();
     stopStatusPoll();
+    for (const t of swapResultPollTimers) clearTimeout(t);
     abortController?.abort();
   });
 
@@ -228,8 +241,7 @@ const SwapPage: Component = () => {
         if (TERMINAL_TX_STATUSES.has(st)) {
           send({ type: "STATUS_DONE" });
           haptic("success");
-          refetchBalances();
-          revalidate("history");
+          pollSwapResult();
           return;
         }
         if (FAILED_TX_STATUSES.has(st)) {
@@ -258,8 +270,7 @@ const SwapPage: Component = () => {
         if (st === "done" || st === "completed") {
           send({ type: "STATUS_DONE", message: msg });
           haptic("success");
-          refetchBalances();
-          revalidate("history");
+          pollSwapResult();
           return;
         }
         if (st === "failed") {

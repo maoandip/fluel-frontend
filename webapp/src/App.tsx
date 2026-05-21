@@ -9,6 +9,7 @@ import SwapPage from "./pages/SwapPage";
 import BetaGate from "./components/layout/BetaGate";
 import RouteErrorFallback from "./components/layout/RouteErrorFallback";
 import { BETA_MODE, isTester, markTester } from "./config/flags";
+import { keysForTab, revalidateStale } from "./lib/refresh";
 import splash from "./components/layout/Splash.module.css";
 
 // Persist tester access via ?tester=1 URL param (checked once at module load).
@@ -53,6 +54,13 @@ const TabHost: Component = () => {
   createEffect(() => {
     const p = activePath();
     if (!mounted().has(p)) setMounted((prev) => new Set(prev).add(p));
+  });
+
+  // Pages never unmount in the keep-alive shell, so switching back to a tab
+  // won't refetch on its own. When a tab is shown, revalidate its data if
+  // it's gone stale — the TTL guard skips a tab just visited.
+  createEffect(() => {
+    revalidateStale(keysForTab(activePath()), 20_000);
   });
 
   const panel = (path: string, Page: Component) => (

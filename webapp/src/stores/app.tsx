@@ -2,12 +2,15 @@ import {
   createContext,
   createSignal,
   createEffect,
+  onMount,
+  onCleanup,
   useContext,
   type JSX,
 } from "solid-js";
-import { createAsync, revalidate } from "@solidjs/router";
+import { createAsync, revalidate, useLocation } from "@solidjs/router";
 import { setDestination as apiSetDestination } from "../api";
 import { queries } from "../lib/queries";
+import { keysForTab, revalidateStale } from "../lib/refresh";
 import type { Chain } from "../types";
 
 interface AppContextValue {
@@ -37,6 +40,25 @@ export function AppProvider(props: { children: JSX.Element }) {
     if (s && !destinationAddress()) {
       setDestinationAddressSignal(s.destinationAddress ?? "");
     }
+  });
+
+  // The keep-alive tab shell keeps every page mounted, so a Telegram Mini App
+  // that's been backgrounded shows stale data on return. Revalidate the
+  // current tab's data — plus the money-critical balances/history — whenever
+  // the app regains focus. The TTL guard makes a quick tab-out/in a no-op.
+  const location = useLocation();
+  onMount(() => {
+    const refreshOnFocus = () => {
+      if (document.visibilityState !== "visible") return;
+      const keys = new Set([...keysForTab(location.pathname), "balances", "history"]);
+      revalidateStale([...keys], 10_000);
+    };
+    document.addEventListener("visibilitychange", refreshOnFocus);
+    window.addEventListener("focus", refreshOnFocus);
+    onCleanup(() => {
+      document.removeEventListener("visibilitychange", refreshOnFocus);
+      window.removeEventListener("focus", refreshOnFocus);
+    });
   });
 
   async function updateDestination(address: string) {

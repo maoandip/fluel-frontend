@@ -1,5 +1,5 @@
-import { revalidate } from "@solidjs/router";
 import { queries } from "../lib/queries";
+import { revalidateNow } from "../lib/refresh";
 
 // Thin re-export so components can consume balances through the unified query
 // cache. Use `balancesQuery()` from a createAsync call in a component, and
@@ -8,5 +8,5 @@ import { queries } from "../lib/queries";
 export const balancesQuery = queries.balances;
 
 export function refetchBalances() {
-  return revalidate("balances");
+  return revalidateNow(["balances"]);
 }
