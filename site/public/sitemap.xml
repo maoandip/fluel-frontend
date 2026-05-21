@@ -6,7 +6,7 @@
   <url><loc>https://fluel.io/roadmap</loc><lastmod>2026-05-14</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://fluel.io/guides</loc><lastmod>2026-04-15</lastmod><changefreq>weekly</changefreq><priority>0.9</priority></url>
   <url><loc>https://fluel.io/waitlist</loc><lastmod>2026-04-15</lastmod><changefreq>weekly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://fluel.io/terms</loc><lastmod>2026-04-15</lastmod><changefreq>yearly</changefreq><priority>0.3</priority></url>
+  <url><loc>https://fluel.io/terms</loc><lastmod>2026-05-21</lastmod><changefreq>yearly</changefreq><priority>0.3</priority></url>
   <url><loc>https://fluel.io/privacy</loc><lastmod>2026-05-14</lastmod><changefreq>yearly</changefreq><priority>0.3</priority></url>
   <url><loc>https://fluel.io/guides/how-to-get-gas-on-any-chain</loc><lastmod>2026-05-14</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://fluel.io/guides/stuck-on-chain-with-no-gas</loc><lastmod>2026-05-14</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
@@ -14,4 +14,9 @@
   <url><loc>https://fluel.io/guides/how-to-get-gas-on-base</loc><lastmod>2026-05-14</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://fluel.io/guides/how-to-get-gas-on-arbitrum</loc><lastmod>2026-05-14</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://fluel.io/guides/bridge-gas-tokens-without-bridging</loc><lastmod>2026-05-14</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://fluel.io/guides/how-to-get-gas-on-optimism</loc><lastmod>2026-05-14</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://fluel.io/guides/how-to-get-gas-on-polygon</loc><lastmod>2026-05-14</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://fluel.io/guides/how-to-get-gas-on-avalanche</loc><lastmod>2026-05-14</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://fluel.io/guides/how-to-get-gas-on-bnb-chain</loc><lastmod>2026-05-14</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://fluel.io/guides/no-gas-to-claim-airdrop</loc><lastmod>2026-05-14</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
 </urlset>
