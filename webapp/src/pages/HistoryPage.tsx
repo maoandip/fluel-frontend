@@ -9,7 +9,6 @@ import { haptic } from "../lib/telegram";
 import EmptyState from "../components/ui/EmptyState";
 import Skeleton from "../components/ui/Skeleton";
 import QueryErrorFallback from "../components/ui/QueryErrorFallback";
-import RefreshButton from "../components/ui/RefreshButton";
 import PullToRefresh from "../components/ui/PullToRefresh";
 import { txStatusClass } from "../lib/status";
 import { timeAgo, dateBucket } from "../lib/format";
@@ -110,10 +109,6 @@ const HistoryPage: Component = () => {
 
   return (
     <div class="page">
-      <div class={s.refreshRow}>
-        <RefreshButton onRefresh={() => revalidateNow(["history"])} label="Refresh history" />
-      </div>
-
       <ErrorBoundary fallback={(err, reset) => (
         <QueryErrorFallback
           err={err}

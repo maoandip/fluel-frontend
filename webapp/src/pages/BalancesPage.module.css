@@ -1,10 +1,4 @@
 
-.refreshRow {
-  display: flex;
-  justify-content: flex-end;
-  margin-bottom: 8px;
-}
-
 /* Scroll/overflow comes from PullToRefresh's viewport — this just caps height
    so the page doesn't also scroll behind it. */
 .scroll {
