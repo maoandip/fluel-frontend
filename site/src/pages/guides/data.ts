@@ -36,7 +36,7 @@ export const guides: Guide[] = [
       },
       {
         heading: "Fees",
-        body: "Transparent, volume-based pricing. $0–10: 2.5%. $10–100: 1.5%. $100–500: 1.0%. $500+: 0.75%. The exact fee is shown before you confirm. Your first swap is free (up to $50) if you join via a referral link."
+        body: "Transparent, volume-based pricing. $0–10: 2.5%. $10–100: 1.5%. $100–500: 1.0%. $500+: 0.75%, with a $0.50 minimum fee per swap. The exact fee is always shown before you confirm. Your first swap is free (up to $50) if you join via a referral link."
       }
     ]
   },
@@ -92,11 +92,11 @@ export const guides: Guide[] = [
       },
       {
         heading: "Option 3: Fluel",
-        body: "Deposit USDC once, get gas on any chain via Telegram. Cost: 1.5% fee on a $10 swap = $0.15. Gas arrives in seconds. No source chain gas needed — fluel covers the transaction fees. For small gas amounts ($1–20), this is the cheapest option."
+        body: "Deposit USDC once, get gas on any chain via Telegram. Cost: a $10 swap is $0.50 (the minimum fee); larger swaps are 0.75–2.5% volume-based. Gas arrives in seconds. No source chain gas needed — fluel covers the transaction fees. For small gas amounts ($1–20), this is the cheapest option."
       },
       {
         heading: "When to use what",
-        body: "Need $100+ of ETH? Use a CEX — the flat withdrawal fee becomes negligible.\nNeed $10–50? A bridge is reasonable if you have gas on the source chain.\nNeed $1–20 of gas and you're stuck? Fluel. The percentage fee on small amounts is lower than any flat fee alternative."
+        body: "Need $100+ of ETH? Use a CEX — the flat withdrawal fee becomes negligible.\nNeed $10–50? A bridge is reasonable if you have gas on the source chain.\nNeed $1–20 of gas and you're stuck? Fluel. The $0.50 minimum fee is still well below any bridge or exchange's flat fee."
       }
     ]
   },
