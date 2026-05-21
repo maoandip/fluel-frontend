@@ -1,4 +1,10 @@
 
+.refreshRow {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 8px;
+}
+
 .walletRow {
   margin-bottom: 0;
 }

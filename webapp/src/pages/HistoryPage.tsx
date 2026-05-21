@@ -1,13 +1,15 @@
 import { Component, Show, For, createSignal, createMemo, Suspense, ErrorBoundary, useTransition } from "solid-js";
-import { createAsync, revalidate } from "@solidjs/router";
+import { createAsync } from "@solidjs/router";
 import type { HistoryTx } from "../api";
 import { queries } from "../lib/queries";
+import { revalidateNow } from "../lib/refresh";
 import { useApp } from "../stores/app";
 import { showToast } from "../stores/toast";
 import { haptic } from "../lib/telegram";
 import EmptyState from "../components/ui/EmptyState";
 import Skeleton from "../components/ui/Skeleton";
 import QueryErrorFallback from "../components/ui/QueryErrorFallback";
+import RefreshButton from "../components/ui/RefreshButton";
 import { txStatusClass } from "../lib/status";
 import { timeAgo, dateBucket } from "../lib/format";
 import { explorerTxUrl } from "../lib/explorers";
@@ -107,12 +109,16 @@ const HistoryPage: Component = () => {
 
   return (
     <div class="page">
+      <div class={s.refreshRow}>
+        <RefreshButton onRefresh={() => revalidateNow(["history"])} label="Refresh history" />
+      </div>
+
       <ErrorBoundary fallback={(err, reset) => (
         <QueryErrorFallback
           err={err}
           reset={reset}
           label="history"
-          refetch={() => revalidate("history")}
+          refetch={() => revalidateNow(["history"])}
         />
       )}>
         <Suspense fallback={<div class={s.loadingCard}><Skeleton rows={5} /></div>}>

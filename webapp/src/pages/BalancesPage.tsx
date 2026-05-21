@@ -8,6 +8,7 @@ import { haptic } from "../lib/telegram";
 import Skeleton from "../components/ui/Skeleton";
 import EmptyState from "../components/ui/EmptyState";
 import QueryErrorFallback from "../components/ui/QueryErrorFallback";
+import RefreshButton from "../components/ui/RefreshButton";
 import WalletBar from "../components/layout/WalletBar";
 import TokenChainIcon from "../components/chain/TokenChainIcon";
 import { NATIVE_TOKEN, type TokenBalance } from "../types";
@@ -130,6 +131,9 @@ const BalancesPage: Component = () => {
 
   return (
     <div class="page">
+      <div class={s.refreshRow}>
+        <RefreshButton onRefresh={refetchBalances} label="Refresh balances" />
+      </div>
       <div class={s.walletRow}><WalletBar /></div>
 
       <ErrorBoundary fallback={(err, reset) => (
