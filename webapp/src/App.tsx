@@ -1,5 +1,6 @@
-import { Component, Show, Suspense, ErrorBoundary, createSignal, createEffect, onMount, lazy, type JSX } from "solid-js";
+import { Component, Show, Suspense, ErrorBoundary, createSignal, createEffect, onMount, type JSX } from "solid-js";
 import { Router, Route, useLocation } from "@solidjs/router";
+import { lazyRoute } from "./lib/lazyRoute";
 import { AppProvider, useApp } from "./stores/app";
 import Toast from "./components/ui/Toast";
 import TabLayout from "./components/layout/TabLayout";
@@ -10,10 +11,10 @@ import RouteErrorFallback from "./components/layout/RouteErrorFallback";
 import { keysForTab, revalidateStale } from "./lib/refresh";
 import splash from "./components/layout/Splash.module.css";
 
-const BalancesPage = lazy(() => import("./pages/BalancesPage"));
-const HistoryPage = lazy(() => import("./pages/HistoryPage"));
-const AutomatePage = lazy(() => import("./pages/AutomatePage"));
-const InvitePage = lazy(() => import("./pages/InvitePage"));
+const BalancesPage = lazyRoute(() => import("./pages/BalancesPage"));
+const HistoryPage = lazyRoute(() => import("./pages/HistoryPage"));
+const AutomatePage = lazyRoute(() => import("./pages/AutomatePage"));
+const InvitePage = lazyRoute(() => import("./pages/InvitePage"));
 
 const TAB_PATHS = ["/", "/balance", "/history", "/automate", "/invite"];
 

@@ -1,23 +1,25 @@
 /* @refresh reload */
 import { render } from "solid-js/web";
-import { lazy, Suspense, ErrorBoundary, type JSX } from "solid-js";
+import { Suspense, ErrorBoundary, type JSX } from "solid-js";
 import { Router, Route } from "@solidjs/router";
 import Layout from "./components/Layout";
 import Landing from "./pages/Landing";
 import PageSkeleton from "./components/PageSkeleton";
 import RouteErrorFallback from "./components/RouteErrorFallback";
+import { lazyRoute } from "./lib/lazyRoute";
 import "./styles/global.css";
 
-// Lazy-load non-landing pages for smaller initial bundle
-const HowItWorks = lazy(() => import("./pages/HowItWorks"));
-const Terms = lazy(() => import("./pages/Terms"));
-const Privacy = lazy(() => import("./pages/Privacy"));
-const Feedback = lazy(() => import("./pages/Feedback"));
-const Chains = lazy(() => import("./pages/Chains"));
-const Roadmap = lazy(() => import("./pages/Roadmap"));
-const GuideList = lazy(() => import("./pages/guides/GuideList"));
-const GuidePage = lazy(() => import("./pages/guides/GuidePage"));
-const NotFound = lazy(() => import("./pages/NotFound"));
+// Lazy-load non-landing pages for a smaller initial bundle. lazyRoute reloads
+// once on a stale-chunk failure (hashed filenames change on every deploy).
+const HowItWorks = lazyRoute(() => import("./pages/HowItWorks"));
+const Terms = lazyRoute(() => import("./pages/Terms"));
+const Privacy = lazyRoute(() => import("./pages/Privacy"));
+const Feedback = lazyRoute(() => import("./pages/Feedback"));
+const Chains = lazyRoute(() => import("./pages/Chains"));
+const Roadmap = lazyRoute(() => import("./pages/Roadmap"));
+const GuideList = lazyRoute(() => import("./pages/guides/GuideList"));
+const GuidePage = lazyRoute(() => import("./pages/guides/GuidePage"));
+const NotFound = lazyRoute(() => import("./pages/NotFound"));
 
 // Every route renders inside the same error + suspense boundary, so a throw
 // in one page never blanks the header/footer and lazy chunk downloads show
