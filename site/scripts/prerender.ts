@@ -21,9 +21,6 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const SITE_ROOT = resolve(__dirname, "..");
 const DIST = resolve(SITE_ROOT, "dist");
 
-// Mirror BETA_MODE logic from config/env.ts without touching import.meta.env
-const BETA_MODE = process.env.VITE_BETA !== "false";
-
 const STATIC_ROUTES = [
   "/",
   "/chains",
@@ -32,7 +29,7 @@ const STATIC_ROUTES = [
   "/guides",
   "/terms",
   "/privacy",
-  BETA_MODE ? "/waitlist" : "/feedback",
+  "/feedback",
 ];
 
 const GUIDE_ROUTES = guides.map((g) => `/guides/${g.slug}`);

@@ -3,7 +3,6 @@ import { createAsync } from "@solidjs/router";
 import s from "./Landing.module.css";
 import CtaButton from "../components/CtaButton";
 import AsyncSection from "../components/AsyncSection";
-import { BETA_MODE } from "../config/flags";
 import { getPrices } from "../lib/queries";
 import { useCanonical } from "../lib/seo";
 import { fmtGwei, gweiLevel, cardLevelClass, gweiLevelClass } from "../lib/gas";
@@ -105,7 +104,7 @@ export default function Landing() {
       {/* Hero */}
       <section class={s.hero}>
         <div class={s.wrapper}>
-          <p class={s.label}>{BETA_MODE ? "Closed beta · launching soon" : "Cross-chain gas"}</p>
+          <p class={s.label}>Cross-chain gas</p>
           <h1 class={s.heroTitle}>Never get stranded<br />on a chain again.</h1>
           <p class={s.heroSub}>Stablecoins in. Gas out. Usually in under a minute. No manual bridging — just Telegram.</p>
           <div class={s.heroCtas}>

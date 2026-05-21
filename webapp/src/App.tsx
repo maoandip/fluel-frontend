@@ -6,17 +6,9 @@ import TabLayout from "./components/layout/TabLayout";
 import BackButtonHandler from "./components/layout/BackButtonHandler";
 import Skeleton from "./components/ui/Skeleton";
 import SwapPage from "./pages/SwapPage";
-import BetaGate from "./components/layout/BetaGate";
 import RouteErrorFallback from "./components/layout/RouteErrorFallback";
-import { BETA_MODE, isTester, markTester } from "./config/flags";
 import { keysForTab, revalidateStale } from "./lib/refresh";
 import splash from "./components/layout/Splash.module.css";
-
-// Persist tester access via ?tester=1 URL param (checked once at module load).
-if (typeof window !== "undefined") {
-  const params = new URLSearchParams(window.location.search);
-  if (params.get("tester") === "1") markTester();
-}
 
 const BalancesPage = lazy(() => import("./pages/BalancesPage"));
 const HistoryPage = lazy(() => import("./pages/HistoryPage"));
@@ -126,18 +118,11 @@ const AppContent: Component<{ children?: JSX.Element }> = (props) => {
   );
 };
 
-// Router shell — chooses between the beta gate and the real app.
+// Router shell — wraps the app in its providers.
 const AppShell: Component<{ children?: JSX.Element }> = (props) => (
-  <Show
-    when={BETA_MODE && !isTester()}
-    fallback={
-      <AppProvider>
-        <AppContent>{props.children}</AppContent>
-      </AppProvider>
-    }
-  >
-    <BetaGate />
-  </Show>
+  <AppProvider>
+    <AppContent>{props.children}</AppContent>
+  </AppProvider>
 );
 
 // One catch-all route: the tab host owns all five tabs and stays mounted.

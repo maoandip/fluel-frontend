@@ -9,17 +9,12 @@ const EnvSchema = v.object({
     ]),
     "",
   ),
-  VITE_BETA: v.optional(
-    v.picklist(["true", "false"], 'VITE_BETA must be "true" or "false"'),
-    "true",
-  ),
 });
 
 function parseEnv() {
   try {
     return v.parse(EnvSchema, {
       VITE_API_BASE: import.meta.env.VITE_API_BASE,
-      VITE_BETA: import.meta.env.VITE_BETA,
     });
   } catch (err) {
     if (v.isValiError(err)) {
