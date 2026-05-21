@@ -2,10 +2,10 @@ import { Component, Show, createSignal, createMemo, createEffect, onCleanup } fr
 import { createAsync } from "@solidjs/router";
 import { useMachine } from "@xstate/solid";
 import { useApp } from "../stores/app";
-import { balancesQuery, refetchBalances } from "../stores/balances";
-import { revalidateNow } from "../lib/refresh";
+import { balancesQuery } from "../stores/balances";
+import { inFlightSwaps, inFlightUsdc, trackSwap } from "../stores/swaps";
 import { showToast } from "../stores/toast";
-import { postQuote, postConfirm, getSwapStatus, getTxState } from "../api";
+import { postQuote, postConfirm } from "../api";
 import { haptic } from "../lib/telegram";
 import { NATIVE_TOKEN } from "../types";
 import { useLocalStorage } from "../lib/hooks/useLocalStorage";
@@ -18,31 +18,18 @@ type SelectorTarget = "from" | "to" | null;
 
 const DEBOUNCE_MS = 500;
 const QUOTE_TTL_MS = 30_000;
-const LONG_POLL_SEC = 30;
-const POLL_RETRY_MS = 1_000;
-const TERMINAL_TX_STATUSES = new Set(["confirmed", "completed", "done"]);
-const FAILED_TX_STATUSES = new Set(["failed", "reverted", "error"]);
 
 const SwapPage: Component = () => {
   const { chains, receiveChains, destinationAddress, setDestinationAddress } = useApp();
   const balances = createAsync(() => balancesQuery().then((b) => b.balances));
 
-  // ── Machine: source of truth for swap-flow state ──
+  // ── Machine: drives only the quote/confirm composition. Once a swap is
+  // submitted it's handed to the in-flight store and the machine resets. ──
   const [state, send] = useMachine(swapMachine);
 
-  // Derived accessors so the JSX can keep reading quoteData(), progress(), etc.
   const quoteData = () => state.context.quote;
   const quoting = () => state.matches("quoting");
-  const txHash = () => state.context.txHash;
-  const statusMsg = () => state.context.statusMsg;
-  const progress = (): "confirming" | "submitting" | "pending" | "done" | "failed" | null => {
-    if (state.matches("confirming")) return "confirming";
-    if (state.matches("submitting")) return "submitting";
-    if (state.matches("pending")) return "pending";
-    if (state.matches("done")) return "done";
-    if (state.matches("failed")) return "failed";
-    return null;
-  };
+  const confirming = () => state.matches("confirming");
 
   // ── User inputs (regular signals) ──
   const [fromChain, setFromChain] = useLocalStorage<string>("fluel:fromChain", "");
@@ -115,32 +102,15 @@ const SwapPage: Component = () => {
   let abortController: AbortController | undefined;
   let quoteVersion = 0;
   let quoteAgeTimer: ReturnType<typeof setInterval> | undefined;
-  let txStateAbort: AbortController | undefined;
-  let statusAbort: AbortController | undefined;
-  let swapResultPollTimers: ReturnType<typeof setTimeout>[] = [];
-
-  function stopTxStatePoll() { txStateAbort?.abort(); txStateAbort = undefined; }
-  function stopStatusPoll() { statusAbort?.abort(); statusAbort = undefined; }
-
-  // Balance indexers/RPCs lag a freshly-settled swap, so a single refetch
-  // usually reads the pre-swap number. Revalidate balances + history a few
-  // times over ~25s to converge on the post-swap state.
-  function pollSwapResult() {
-    for (const t of swapResultPollTimers) clearTimeout(t);
-    swapResultPollTimers = [0, 4_000, 9_000, 16_000, 25_000].map((d) =>
-      setTimeout(() => { void revalidateNow(["balances", "history"]); }, d),
-    );
-  }
 
   onCleanup(() => {
     clearTimeout(debounceTimer);
     clearInterval(quoteAgeTimer);
-    stopTxStatePoll();
-    stopStatusPoll();
-    for (const t of swapResultPollTimers) clearTimeout(t);
     abortController?.abort();
   });
 
+  // Spendable USDC on the pay chain: on-chain balance minus what earlier,
+  // still-settling swaps have already committed (held by the in-flight store).
   const fromBalance = createMemo(() => {
     const b = balances();
     if (!b) return undefined;
@@ -151,7 +121,8 @@ const SwapPage: Component = () => {
     const stable = tokens.find((t) => t.address.toLowerCase() !== NATIVE_TOKEN);
     if (!stable || stable.amount === "0") return undefined;
     const human = Number(BigInt(stable.amount)) / 10 ** stable.decimals;
-    return human > 0 ? String(human) : undefined;
+    const available = human - inFlightUsdc(fromChain());
+    return available > 0 ? String(available) : undefined;
   });
 
   // Same-chain swaps are allowed (e.g. USDC -> native gas on one chain) —
@@ -215,77 +186,6 @@ const SwapPage: Component = () => {
     scheduleQuote();
   });
 
-  // ── Post-swap long-poll loops ──
-  // Phase 1 polls /api/tx until txHash arrives; phase 2 polls /api/status
-  // for LI.FI substatus until the swap settles. Each loop owns an
-  // AbortController so cleanup/reset/retry can cancel an in-flight request.
-
-  function isAborted(err: unknown): boolean {
-    return (err as { name?: string })?.name === "AbortError";
-  }
-
-  async function startTxStatePoll(submitId: string) {
-    stopTxStatePoll();
-    const ctl = new AbortController();
-    txStateAbort = ctl;
-    while (!ctl.signal.aborted) {
-      try {
-        const res = await getTxState(submitId, LONG_POLL_SEC, ctl.signal);
-        if (ctl.signal.aborted) return;
-        const st = res.status.toLowerCase();
-        if (res.txHash) {
-          send({ type: "TX_HASH_READY", txHash: res.txHash });
-          startStatusPoll(res.txHash);
-          return;
-        }
-        if (TERMINAL_TX_STATUSES.has(st)) {
-          send({ type: "STATUS_DONE" });
-          haptic("success");
-          pollSwapResult();
-          return;
-        }
-        if (FAILED_TX_STATUSES.has(st)) {
-          send({ type: "STATUS_FAILED", message: res.status });
-          haptic("error");
-          return;
-        }
-        // Long-poll timed out with no transition — loop and re-issue.
-      } catch (err) {
-        if (isAborted(err)) return;
-        await new Promise((r) => setTimeout(r, POLL_RETRY_MS));
-      }
-    }
-  }
-
-  async function startStatusPoll(hash: string) {
-    stopStatusPoll();
-    const ctl = new AbortController();
-    statusAbort = ctl;
-    while (!ctl.signal.aborted) {
-      try {
-        const res = await getSwapStatus(hash, LONG_POLL_SEC, ctl.signal);
-        if (ctl.signal.aborted) return;
-        const msg = res.message || res.substatus || res.status;
-        const st = res.status.toLowerCase();
-        if (st === "done" || st === "completed") {
-          send({ type: "STATUS_DONE", message: msg });
-          haptic("success");
-          pollSwapResult();
-          return;
-        }
-        if (st === "failed") {
-          send({ type: "STATUS_FAILED", message: msg });
-          haptic("error");
-          return;
-        }
-        send({ type: "STATUS_UPDATE", message: msg });
-      } catch (err) {
-        if (isAborted(err)) return;
-        await new Promise((r) => setTimeout(r, POLL_RETRY_MS));
-      }
-    }
-  }
-
   // ── Actions ──
   function setMax() {
     const b = fromBalance();
@@ -307,36 +207,26 @@ const SwapPage: Component = () => {
     send({ type: "CONFIRM" });
     try {
       const result = await postConfirm();
-      send({ type: "SUBMIT_ACCEPTED", submitId: result.submitId });
-      // Synchronous txHash means an idempotent hit on an already-submitted swap.
-      if (result.txHash) {
-        send({ type: "TX_HASH_READY", txHash: result.txHash });
-        startStatusPoll(result.txHash);
-      } else {
-        startTxStatePoll(result.submitId);
-      }
+      // Hand the swap to the in-flight store — it polls to completion in the
+      // background. The form resets so another swap can start right away.
+      trackSwap({
+        submitId: result.submitId,
+        fromChain: fromChain(),
+        toChain: toChain(),
+        amountUsdc: amt,
+        toSymbol: quoteData()?.toSymbol ?? "gas",
+        txHash: result.txHash ?? "",
+      });
+      send({ type: "SUBMITTED" });
+      setAmount("");
+      haptic("success");
+      showToast("Swap submitted — settling in the background");
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Swap failed";
       showToast(msg);
       send({ type: "CONFIRM_FAILURE", error: msg });
       haptic("error");
     }
-  }
-
-  function resetSwap() {
-    setAmount("");
-    stopStatusPoll();
-    stopTxStatePoll();
-    clearInterval(quoteAgeTimer);
-    send({ type: "RESET" });
-    refetchBalances();
-  }
-
-  function retrySwap() {
-    stopStatusPoll();
-    stopTxStatePoll();
-    send({ type: "RESET" });
-    scheduleQuote();
   }
 
   // ── Chain selector ──
@@ -413,6 +303,8 @@ const SwapPage: Component = () => {
     };
   });
 
+  const settlingCount = () => inFlightSwaps().length;
+
   const isValidAddress = (addr: string) => /^0x[0-9a-fA-F]{40}$/.test(addr);
 
   async function copyDestination(e: MouseEvent) {
@@ -477,7 +369,18 @@ const SwapPage: Component = () => {
       </Show>
 
       {/* ── FORM ── */}
-      <Show when={!progress() && destinationAddress() && !destEditing()}>
+      <Show when={destinationAddress() && !destEditing()}>
+        {/* Background settlement — earlier swaps still finishing. The form
+            stays usable; this is a non-blocking indicator. */}
+        <Show when={settlingCount() > 0}>
+          <div class={s.settling}>
+            <div class={s.settlingSpinner} />
+            <span class={s.settlingText}>
+              {settlingCount()} swap{settlingCount() > 1 ? "s" : ""} settling — you can start another
+            </span>
+          </div>
+        </Show>
+
         {/* Destination */}
         <div
           class={s.destIndicator}
@@ -614,56 +517,18 @@ const SwapPage: Component = () => {
         <button
           class={s.cta}
           onClick={handleConfirm}
-          disabled={!quoteData() || quoting() || !!progress()}
+          disabled={!quoteData() || quoting() || confirming()}
         >
-          {!fromChain() || !toChain() ? "Select chains" : quoting() ? "Getting price..." : quoteData() ? "Swap" : "Enter amount"}
+          {confirming()
+            ? "Submitting..."
+            : !fromChain() || !toChain()
+              ? "Select chains"
+              : quoting()
+                ? "Getting price..."
+                : quoteData()
+                  ? "Swap"
+                  : "Enter amount"}
         </button>
-      </Show>
-
-      {/* ── PROGRESS / RESULT ── */}
-      <Show when={progress()}>
-        <div class={s.swapProgress}>
-          {/* Confirming / Submitting / Pending — spinner */}
-          <Show when={progress() === "confirming" || progress() === "submitting" || progress() === "pending"}>
-            <div class={s.progressSpinner} />
-            <h3>
-              {progress() === "confirming"
-                ? "Confirming..."
-                : progress() === "submitting"
-                  ? "Submitting"
-                  : "Swapping"}
-            </h3>
-            <p class={s.statusText}>{statusMsg() || "Waiting for confirmation..."}</p>
-            <Show when={txHash()}>
-              <div class={s.hash}>{txHash()}</div>
-            </Show>
-          </Show>
-
-          {/* Done */}
-          <Show when={progress() === "done"}>
-            <div class={s.progressIconSuccess}>
-              <svg viewBox="0 0 24 24" stroke="currentColor"><path d="M5 13l4 4L19 7" /></svg>
-            </div>
-            <h3>Swap Complete</h3>
-            <p class={s.statusText}>{statusMsg() || "Your gas has arrived!"}</p>
-            <div class={s.hash}>{txHash()}</div>
-            <button class={s.actionBtn} onClick={resetSwap}>New Swap</button>
-          </Show>
-
-          {/* Failed */}
-          <Show when={progress() === "failed"}>
-            <div class={s.progressIconFail}>
-              <svg viewBox="0 0 24 24" stroke="currentColor"><path d="M18 6L6 18M6 6l12 12" /></svg>
-            </div>
-            <h3>Swap Failed</h3>
-            <p class={s.statusText}>{statusMsg() || "Something went wrong"}</p>
-            <Show when={txHash()}>
-              <div class={s.hash}>{txHash()}</div>
-            </Show>
-            <button class={s.actionBtn} onClick={retrySwap}>Try Again</button>
-            <button class={s.actionBtnSecondary} onClick={resetSwap}>New Swap</button>
-          </Show>
-        </div>
       </Show>
 
       <Show when={selectorOpen()}>

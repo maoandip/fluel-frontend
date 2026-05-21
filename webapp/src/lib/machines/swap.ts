@@ -1,28 +1,22 @@
-// Swap flow state machine.
+// Swap composition state machine.
 //
-// Models the lifecycle of a cross-chain gas swap as a finite state machine
-// so invalid state combinations (e.g. "quoting" + "pending") become
-// structurally impossible. The component orchestrates the async work
-// (debounced fetch, status polling) and drives the machine via events.
+// Models only the *composition* of a swap — quoting and confirming. Once the
+// backend accepts the submission (SUBMITTED) the machine returns to idle: the
+// settling half of the journey is owned by the in-flight swaps store
+// (stores/swaps.ts), not the form, so the user can immediately compose
+// another swap while earlier ones settle in the background.
 //
 // States:
 //   idle       — no active quote
 //   quoting    — fetching a price quote
-//   quoted     — have a fresh quote, waiting for user to confirm
-//   confirming — user clicked swap, posting /confirm
-//   submitting — /confirm accepted, waiting for txHash via /api/tx polling
-//   pending    — tx hash known, polling /api/status for LI.FI progress
-//   done       — tx complete
-//   failed     — tx or confirm failed; retry transitions back to confirming
+//   quoted     — have a fresh quote, waiting for the user to confirm
+//   confirming — user clicked Swap, posting /confirm
 
 import { createMachine, assign } from "xstate";
 import type { QuoteResponse } from "../../types";
 
 export interface SwapContext {
   quote: QuoteResponse | null;
-  submitId: string;
-  txHash: string;
-  statusMsg: string;
   error: string;
 }
 
@@ -32,13 +26,8 @@ export type SwapEvent =
   | { type: "QUOTE_FAILURE"; error: string }
   | { type: "CLEAR" }
   | { type: "CONFIRM" }
-  | { type: "SUBMIT_ACCEPTED"; submitId: string }
-  | { type: "TX_HASH_READY"; txHash: string }
-  | { type: "CONFIRM_FAILURE"; error: string }
-  | { type: "STATUS_UPDATE"; message: string }
-  | { type: "STATUS_DONE"; message?: string }
-  | { type: "STATUS_FAILED"; message?: string }
-  | { type: "RESET" };
+  | { type: "SUBMITTED" }
+  | { type: "CONFIRM_FAILURE"; error: string };
 
 export const swapMachine = createMachine({
   id: "swap",
@@ -49,9 +38,6 @@ export const swapMachine = createMachine({
   },
   context: {
     quote: null,
-    submitId: "",
-    txHash: "",
-    statusMsg: "",
     error: "",
   },
   states: {
@@ -97,12 +83,11 @@ export const swapMachine = createMachine({
     },
     confirming: {
       on: {
-        SUBMIT_ACCEPTED: {
-          target: "submitting",
-          actions: assign({
-            submitId: ({ event }) => event.submitId,
-            statusMsg: "Submitting transaction...",
-          }),
+        // Submission accepted — the swap is now the in-flight store's job.
+        // Reset to idle so the form is immediately fresh for the next swap.
+        SUBMITTED: {
+          target: "idle",
+          actions: assign({ quote: null, error: "" }),
         },
         CONFIRM_FAILURE: {
           target: "quoted",
@@ -110,68 +95,5 @@ export const swapMachine = createMachine({
         },
       },
     },
-    submitting: {
-      on: {
-        TX_HASH_READY: {
-          target: "pending",
-          actions: assign({
-            txHash: ({ event }) => event.txHash,
-            statusMsg: "Transaction submitted...",
-          }),
-        },
-        // Idempotent confirm hits a row that's already complete or failed.
-        STATUS_DONE: {
-          target: "done",
-          actions: assign({
-            statusMsg: ({ event }) => event.message ?? "Your gas has arrived!",
-          }),
-        },
-        STATUS_FAILED: {
-          target: "failed",
-          actions: assign({
-            statusMsg: ({ event }) => event.message ?? "Swap failed",
-          }),
-        },
-        STATUS_UPDATE: {
-          actions: assign({ statusMsg: ({ event }) => event.message }),
-        },
-      },
-    },
-    pending: {
-      on: {
-        STATUS_UPDATE: {
-          actions: assign({ statusMsg: ({ event }) => event.message }),
-        },
-        STATUS_DONE: {
-          target: "done",
-          actions: assign({
-            statusMsg: ({ event }) => event.message ?? "Your gas has arrived!",
-          }),
-        },
-        STATUS_FAILED: {
-          target: "failed",
-          actions: assign({
-            statusMsg: ({ event }) => event.message ?? "Swap failed",
-          }),
-        },
-      },
-    },
-    done: {
-      on: {
-        RESET: { target: "idle", actions: assign(() => initialContext()) },
-      },
-    },
-    failed: {
-      on: {
-        RESET: { target: "idle", actions: assign(() => initialContext()) },
-        // Retry: go back to quoted so the user can re-confirm with the
-        // existing quote data (if still valid) or re-quote and retry.
-        QUOTE_REQUEST: { target: "quoting" },
-      },
-    },
   },
 });
-
-function initialContext(): SwapContext {
-  return { quote: null, submitId: "", txHash: "", statusMsg: "", error: "" };
-}
