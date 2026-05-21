@@ -1,5 +1,5 @@
 import { createSignal } from "solid-js";
-import { getTxState, getSwapStatus } from "../api";
+import { getTxState, getSwapStatus, ApiError } from "../api";
 import { showToast } from "./toast";
 import { revalidateNow } from "../lib/refresh";
 import { haptic } from "../lib/telegram";
@@ -30,10 +30,22 @@ const POLL_DEADLINE_MS = 3 * 60_000;
 const STALE_MS = 30 * 60_000;
 const LONG_POLL_SEC = 30;
 const POLL_RETRY_MS = 1_000;
+const MAX_BACKOFF_MS = 30_000;
 const TERMINAL_TX = new Set(["confirmed", "completed", "done"]);
 const FAILED_TX = new Set(["failed", "reverted", "error"]);
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+// Delay before retrying a failed poll request. A 429 carries the server's
+// Retry-After — honor it exactly. Any other failure (network blip, 5xx) gets
+// exponential backoff so a persistent error can't become a 1/sec retry storm
+// that itself sustains the rate limit.
+function retryDelayMs(err: unknown, attempt: number): number {
+  if (err instanceof ApiError && err.retryAfter !== undefined) {
+    return err.retryAfter * 1000;
+  }
+  return Math.min(POLL_RETRY_MS * 2 ** attempt, MAX_BACKOFF_MS);
+}
 
 function loadPersisted(): InFlightSwap[] {
   try {
@@ -101,12 +113,14 @@ function settle(submitId: string, outcome: "done" | "failed" | "slow", message: 
 async function poll(swap: InFlightSwap): Promise<void> {
   const deadline = swap.startedAt + POLL_DEADLINE_MS;
   let txHash = swap.txHash;
+  let errors = 0; // consecutive failures — drives backoff, reset on success
 
   // Phase 1 — wait for the on-chain hash. Always make at least one attempt
   // (a swap resumed from a previous session may already be well past it).
   while (!txHash) {
     try {
       const res = await getTxState(swap.submitId, LONG_POLL_SEC);
+      errors = 0;
       const st = res.status.toLowerCase();
       if (res.txHash) {
         txHash = res.txHash;
@@ -115,9 +129,9 @@ async function poll(swap: InFlightSwap): Promise<void> {
       }
       if (TERMINAL_TX.has(st)) return settle(swap.submitId, "done", "Swap complete — gas delivered.");
       if (FAILED_TX.has(st)) return settle(swap.submitId, "failed", "A swap failed. See History for details.");
-    } catch {
+    } catch (err) {
       if (Date.now() >= deadline) break;
-      await sleep(POLL_RETRY_MS);
+      await sleep(retryDelayMs(err, errors++));
       continue;
     }
     if (Date.now() >= deadline) break;
@@ -127,15 +141,17 @@ async function poll(swap: InFlightSwap): Promise<void> {
   }
 
   // Phase 2 — wait for cross-chain settlement.
+  errors = 0;
   for (;;) {
     try {
       const res = await getSwapStatus(txHash, LONG_POLL_SEC);
+      errors = 0;
       const st = res.status.toLowerCase();
       if (st === "done" || st === "completed") return settle(swap.submitId, "done", "Swap complete — gas delivered.");
       if (st === "failed") return settle(swap.submitId, "failed", "A swap failed. See History for details.");
-    } catch {
+    } catch (err) {
       if (Date.now() >= deadline) break;
-      await sleep(POLL_RETRY_MS);
+      await sleep(retryDelayMs(err, errors++));
       continue;
     }
     if (Date.now() >= deadline) break;
