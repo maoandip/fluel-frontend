@@ -5,7 +5,7 @@ export default function Terms() {
   document.title = "Terms of Service — fluel";
   useCanonical("/terms");
   return (
-    <LegalPage title="Terms of Service" updated="April 2026">
+    <LegalPage title="Terms of Service" updated="May 2026">
       <Section title="1. About Us">
         <p>Fluel is a trading name of MAD Protocol Ltd, a company registered in England and Wales (Company No. 11232367). Our registered office is at Apollo House, Hallam Way, Whitehills Business Park, Blackpool, England, FY4 5FS. You can contact us at <a href="mailto:contact@fluel.io">contact@fluel.io</a>.</p>
       </Section>
@@ -75,6 +75,7 @@ export default function Terms() {
           <li>Attempting to circumvent geographic restrictions or sanctions.</li>
           <li>Interfering with, disrupting, or overloading the Service infrastructure.</li>
           <li>Automated abuse, botting, or denial-of-service attacks.</li>
+          <li>Exploiting, gaming, or abusing promotional features, fee discounts, gas sponsorship, or referral rewards — including through multiple, fake, or automated accounts.</li>
           <li>Fraudulent activity or misrepresentation.</li>
         </ul>
       </Section>
