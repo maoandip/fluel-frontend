@@ -6,7 +6,50 @@
 }
 
 .walletRow {
+  display: flex;
+  align-items: stretch;
+  gap: 8px;
   margin-bottom: 0;
+}
+
+/* The wallet bar grows; the refresh button keeps its fixed width on the right. */
+.walletRow > :first-child {
+  flex: 1;
+  min-width: 0;
+}
+
+.refreshBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  flex-shrink: 0;
+  background: rgba(0, 255, 178, .06);
+  border: 1px solid var(--c-border);
+  border-radius: 4px;
+  color: var(--c-muted);
+  cursor: pointer;
+  transition: color .15s, border-color .15s, background .15s;
+  -webkit-tap-highlight-color: transparent;
+  padding: 0;
+}
+
+.refreshBtn:active {
+  color: var(--c-accent);
+  background: rgba(0, 255, 178, .12);
+  border-color: rgba(0, 255, 178, .3);
+}
+
+.refreshing {
+  color: var(--c-accent);
+}
+
+.refreshing svg {
+  animation: refreshSpin .7s linear infinite;
+}
+
+@keyframes refreshSpin {
+  to { transform: rotate(360deg); }
 }
 
 .card {

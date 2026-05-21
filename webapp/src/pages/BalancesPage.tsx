@@ -32,8 +32,23 @@ const BalancesPage: Component = () => {
 
   const [withdrawing, setWithdrawing] = createSignal(false);
   const [selectedChains, setSelectedChains] = createSignal<Set<number>>(new Set());
+  const [refreshing, setRefreshing] = createSignal(false);
 
   const isUsdc = (token: TokenBalance) => token.address.toLowerCase() !== NATIVE_TOKEN;
+
+  // Manual refresh — a fallback to pull-to-refresh for older Telegram clients
+  // where the pull gesture isn't available. Tucked into the wallet row so it
+  // costs no extra height.
+  async function handleRefresh() {
+    if (refreshing()) return;
+    setRefreshing(true);
+    haptic("light");
+    try {
+      await Promise.all([refetchBalances(), new Promise((r) => setTimeout(r, 450))]);
+    } finally {
+      setRefreshing(false);
+    }
+  }
 
   function toggleChain(chainId: number) {
     const next = new Set(selectedChains());
@@ -131,7 +146,20 @@ const BalancesPage: Component = () => {
 
   return (
     <div class="page">
-      <div class={s.walletRow}><WalletBar /></div>
+      <div class={s.walletRow}>
+        <WalletBar />
+        <button
+          type="button"
+          class={s.refreshBtn}
+          classList={{ [s.refreshing]: refreshing() }}
+          onClick={handleRefresh}
+          disabled={refreshing()}
+          aria-label="Refresh balances"
+          title="Refresh"
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/></svg>
+        </button>
+      </div>
 
       <PullToRefresh class={s.scroll} onRefresh={refetchBalances}>
       <ErrorBoundary fallback={(err, reset) => (
