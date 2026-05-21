@@ -10,6 +10,7 @@ import EmptyState from "../components/ui/EmptyState";
 import Skeleton from "../components/ui/Skeleton";
 import QueryErrorFallback from "../components/ui/QueryErrorFallback";
 import RefreshButton from "../components/ui/RefreshButton";
+import PullToRefresh from "../components/ui/PullToRefresh";
 import { txStatusClass } from "../lib/status";
 import { timeAgo, dateBucket } from "../lib/format";
 import { explorerTxUrl } from "../lib/explorers";
@@ -131,7 +132,11 @@ const HistoryPage: Component = () => {
           </Show>
 
           <Show when={txs().length > 0}>
-            <div class={s.list} onScroll={onScroll}>
+            <PullToRefresh
+              class={s.list}
+              onScroll={onScroll}
+              onRefresh={() => revalidateNow(["history"])}
+            >
               <For each={sections()}>
                 {(section) => (
                   <div class={s.section}>
@@ -221,7 +226,7 @@ const HistoryPage: Component = () => {
                     : "No more transactions"}
                 </div>
               </Show>
-            </div>
+            </PullToRefresh>
           </Show>
         </Suspense>
       </ErrorBoundary>

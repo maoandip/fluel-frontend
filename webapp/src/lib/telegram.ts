@@ -77,6 +77,8 @@ interface TelegramWebApp {
   ready(): void;
   expand(): void;
   close(): void;
+  // Bot API 7.7+ — absent on older clients, hence optional.
+  disableVerticalSwipes?(): void;
   setHeaderColor(color: string): void;
   setBackgroundColor(color: string): void;
   enableClosingConfirmation(): void;
@@ -194,6 +196,10 @@ export function setupTheme() {
 export function initTelegram() {
   tg.ready();
   tg.expand();
+  // Disable Telegram's swipe-down-to-minimise gesture so it doesn't fight
+  // in-app scrolling or pull-to-refresh. Users can still close via the
+  // Telegram header. No-op / throws on older clients — guard both.
+  try { tg.disableVerticalSwipes?.(); } catch { /* unsupported on older Telegram clients */ }
   tg.setHeaderColor("#111113");
   tg.setBackgroundColor("#09090b");
   tg.enableClosingConfirmation();

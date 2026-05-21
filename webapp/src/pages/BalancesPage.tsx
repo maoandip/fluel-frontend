@@ -9,6 +9,7 @@ import Skeleton from "../components/ui/Skeleton";
 import EmptyState from "../components/ui/EmptyState";
 import QueryErrorFallback from "../components/ui/QueryErrorFallback";
 import RefreshButton from "../components/ui/RefreshButton";
+import PullToRefresh from "../components/ui/PullToRefresh";
 import WalletBar from "../components/layout/WalletBar";
 import TokenChainIcon from "../components/chain/TokenChainIcon";
 import { NATIVE_TOKEN, type TokenBalance } from "../types";
@@ -136,6 +137,7 @@ const BalancesPage: Component = () => {
       </div>
       <div class={s.walletRow}><WalletBar /></div>
 
+      <PullToRefresh class={s.scroll} onRefresh={refetchBalances}>
       <ErrorBoundary fallback={(err, reset) => (
         <QueryErrorFallback err={err} reset={reset} label="balances" refetch={refetchBalances} />
       )}>
@@ -224,6 +226,7 @@ const BalancesPage: Component = () => {
       </Show>
         </Suspense>
       </ErrorBoundary>
+      </PullToRefresh>
     </div>
   );
 };

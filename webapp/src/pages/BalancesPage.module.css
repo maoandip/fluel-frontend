@@ -5,6 +5,12 @@
   margin-bottom: 8px;
 }
 
+/* Scroll/overflow comes from PullToRefresh's viewport — this just caps height
+   so the page doesn't also scroll behind it. */
+.scroll {
+  max-height: calc(100vh - 200px);
+}
+
 .walletRow {
   margin-bottom: 0;
 }

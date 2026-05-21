@@ -1,0 +1,36 @@
+.viewport {
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Pull indicator — its height tracks the drag and clips the spinner as it
+   emerges. Snaps closed on release via the .snapping transition. */
+.indicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 0;
+  overflow: hidden;
+}
+
+.snapping {
+  transition: height .25s ease;
+}
+
+.spinner {
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  border: 2px solid var(--c-border);
+  border-top-color: var(--c-accent);
+}
+
+.spinning {
+  animation: ptrSpin .7s linear infinite;
+}
+
+@keyframes ptrSpin {
+  to { transform: rotate(360deg); }
+}

@@ -12,11 +12,9 @@
   padding: 16px 20px;
 }
 
+/* Scroll/overflow comes from PullToRefresh's viewport — this just caps height. */
 .list {
-  padding: 0;
   max-height: calc(100vh - 140px);
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
 }
 
 /* Each day is rendered as its own card, with a clear gap between days. */
