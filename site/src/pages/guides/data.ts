@@ -36,7 +36,7 @@ export const guides: Guide[] = [
       },
       {
         heading: "Fees",
-        body: "Transparent, volume-based pricing. Swaps start at $10. $10–100: 1.5%. $100–500: 1.0%. $500+: 0.75%, with a $0.50 minimum fee per swap. The exact fee is always shown before you confirm. Your first swap is free (up to $50) if you join via a referral link."
+        body: "Transparent, volume-based pricing. Swaps start at $10. $10–100: 2%. $100–500: 1.5%. $500+: 1%, with a $0.50 minimum fee per swap. On high-cost networks such as Ethereum mainnet the fee runs higher — it covers the network gas Fluel sponsors for you. The exact fee is always shown before you confirm. Your first swap is free (up to $50) if you join via a referral link."
       }
     ]
   },
@@ -92,7 +92,7 @@ export const guides: Guide[] = [
       },
       {
         heading: "Option 3: Fluel",
-        body: "Deposit USDC once, get gas on any chain via Telegram. Cost: a $10 swap is $0.50 (the minimum fee); larger swaps are 0.75–1.5% volume-based. Gas arrives in seconds. No source chain gas needed — fluel covers the transaction fees. For small gas amounts, this is the cheapest option."
+        body: "Deposit USDC once, get gas on any chain via Telegram. Cost: a $10 swap is $0.50 (the minimum fee); larger swaps are 1–2% volume-based. Gas arrives in seconds. No source chain gas needed — fluel covers the transaction fees. For small gas amounts, this is the cheapest option."
       },
       {
         heading: "When to use what",

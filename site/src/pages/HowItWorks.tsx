@@ -204,12 +204,12 @@ export default function HowItWorks() {
         </p>
         <div class={s.feeTable}>
           <div class={`${s.feeRow} ${s.feeHeader}`}><span>Swap size</span><span>Fee</span></div>
-          <div class={s.feeRow}><span>$10 – $100</span><span class={s.feeValue}>1.5%</span></div>
-          <div class={s.feeRow}><span>$100 – $500</span><span class={s.feeValue}>1.0%</span></div>
-          <div class={s.feeRow}><span>$500+</span><span class={s.feeValue}>0.75%</span></div>
+          <div class={s.feeRow}><span>$10 – $100</span><span class={s.feeValue}>2%</span></div>
+          <div class={s.feeRow}><span>$100 – $500</span><span class={s.feeValue}>1.5%</span></div>
+          <div class={s.feeRow}><span>$500+</span><span class={s.feeValue}>1%</span></div>
           <div class={`${s.feeRow} ${s.feeHighlight}`}><span>First swap via referral (up to $50)</span><span class={s.feeValue}>Free</span></div>
         </div>
-        <p class={s.feeNote}>Swaps start at $10, with a $0.50 minimum fee — so the smallest swaps pay $0.50 (around 5% on a $10 swap, falling as the amount rises). The exact fee is always shown before you confirm. Network gas and bridge fees, set by Li.Fi rather than Fluel, are listed separately in the quote.</p>
+        <p class={s.feeNote}>Swaps start at $10, with a $0.50 minimum fee — so the smallest swaps pay $0.50 (around 5% on a $10 swap, falling as the amount rises). On high-cost networks such as Ethereum mainnet the fee runs higher: it covers the network gas Fluel sponsors for you, so the effective rate can sit well above the tier rate. The exact fee is always shown in the quote before you confirm — and a swap too small to cover a network's costs is declined, with a suggestion to try a larger amount or a lower-cost chain. Bridge fees charged by Li.Fi's underlying protocols are itemised in the same quote.</p>
         <p class={p.sectionDesc}>
           Stuck on a chain with no gas? The usual routes cost more — or don't work at all. A centralised-exchange withdrawal runs roughly $1–15 in fees and needs a verified account; a bridge charges about $1–5 and still needs gas on the source chain you don't have. Fluel's $0.50 minimum needs nothing but USDC, and gas arrives in seconds.
         </p>
