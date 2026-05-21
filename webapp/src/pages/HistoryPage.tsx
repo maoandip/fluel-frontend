@@ -134,10 +134,11 @@ const HistoryPage: Component = () => {
             <div class={s.list} onScroll={onScroll}>
               <For each={sections()}>
                 {(section) => (
-                  <>
+                  <div class={s.section}>
                     <div class={s.sectionHeader}>{section.label}</div>
-                    <For each={section.items}>
-                      {(tx) => {
+                    <div class={s.sectionCard}>
+                      <For each={section.items}>
+                        {(tx) => {
                         const failed = FAILED_STATUSES.has(tx.status);
                         const explorer = txExplorerUrl(tx);
                         return (
@@ -204,9 +205,10 @@ const HistoryPage: Component = () => {
                             </div>
                           </div>
                         );
-                      }}
-                    </For>
-                  </>
+                        }}
+                      </For>
+                    </div>
+                  </div>
                 )}
               </For>
               <Show when={loadingMore()}>
