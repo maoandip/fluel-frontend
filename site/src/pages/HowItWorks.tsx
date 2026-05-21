@@ -200,17 +200,19 @@ export default function HowItWorks() {
         {/* Fees */}
         <h2 class={p.sectionTitle}>Transparent fees</h2>
         <p class={p.sectionDesc}>
-          Fluel charges a service fee on each swap. The fee is applied to the transaction amount before the swap is submitted to the underlying protocol — you see the exact amount in the quote before confirming. No hidden charges.
+          Fluel charges one service fee on each swap — nothing else. You see the exact amount in the quote before you confirm. No hidden charges, no spread, no subscription.
         </p>
         <div class={s.feeTable}>
           <div class={`${s.feeRow} ${s.feeHeader}`}><span>Swap size</span><span>Fee</span></div>
-          <div class={s.feeRow}><span>$0 – $10</span><span class={s.feeValue}>2.5%</span></div>
           <div class={s.feeRow}><span>$10 – $100</span><span class={s.feeValue}>1.5%</span></div>
           <div class={s.feeRow}><span>$100 – $500</span><span class={s.feeValue}>1.0%</span></div>
           <div class={s.feeRow}><span>$500+</span><span class={s.feeValue}>0.75%</span></div>
           <div class={`${s.feeRow} ${s.feeHighlight}`}><span>First swap via referral (up to $50)</span><span class={s.feeValue}>Free</span></div>
         </div>
-        <p class={s.feeNote}>Minimum fee: $0.50 per swap. Network gas costs and bridge fees (set by Li.Fi, not Fluel) are shown separately in the quote.</p>
+        <p class={s.feeNote}>Swaps start at $10, with a $0.50 minimum fee — so the smallest swaps pay $0.50 (around 5% on a $10 swap, falling as the amount rises). The exact fee is always shown before you confirm. Network gas and bridge fees, set by Li.Fi rather than Fluel, are listed separately in the quote.</p>
+        <p class={p.sectionDesc}>
+          Stuck on a chain with no gas? The usual routes cost more — or don't work at all. A centralised-exchange withdrawal runs roughly $1–15 in fees and needs a verified account; a bridge charges about $1–5 and still needs gas on the source chain you don't have. Fluel's $0.50 minimum needs nothing but USDC, and gas arrives in seconds.
+        </p>
 
         {/* Transparency */}
         <h2 class={p.sectionTitle}>Full transparency</h2>

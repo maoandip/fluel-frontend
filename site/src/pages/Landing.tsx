@@ -165,7 +165,7 @@ export default function Landing() {
           <div class={s.featGrid}>
             <div class={s.featCard}>
               <span class={s.featTitle}>Volume discounts</span>
-              <p class={s.featText}>$0–10: 2.5% · $10–100: 1.5% · $100–500: 1.0% · $500+: 0.75%. Exact fee shown before every swap.</p>
+              <p class={s.featText}>Swaps from $10. 1.5% down to 0.75% by volume, $0.50 minimum — the exact fee shown before every swap. A bridge or exchange withdrawal for the same small top-up costs several times more.</p>
               <p class={s.featLoss}>Never overpay for gas.</p>
             </div>
             <div class={s.featCard}>

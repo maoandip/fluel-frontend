@@ -19,6 +19,9 @@ type SelectorTarget = "from" | "to" | null;
 
 const DEBOUNCE_MS = 500;
 const QUOTE_TTL_MS = 30_000;
+// Mirrors the backend MIN_SWAP_AMOUNT — surfaced client-side so a too-small
+// amount gives instant feedback instead of a round-trip 400.
+const MIN_SWAP_USD = 10;
 
 const SwapPage: Component = () => {
   const { chains, receiveChains, destinationAddress, setDestinationAddress } = useApp();
@@ -127,10 +130,17 @@ const SwapPage: Component = () => {
   });
 
   // Same-chain swaps are allowed (e.g. USDC -> native gas on one chain) —
-  // LI.FI treats them as a plain DEX swap. Only require both chains + amount.
+  // LI.FI treats them as a plain DEX swap. Require both chains + an amount at
+  // or above the minimum swap.
   const canQuote = createMemo(() => {
     const a = parseFloat(amount());
-    return fromChain() && toChain() && a > 0;
+    return !!fromChain() && !!toChain() && a >= MIN_SWAP_USD;
+  });
+
+  // True once the user has typed something, but it's below the minimum swap.
+  const belowMinimum = createMemo(() => {
+    const a = parseFloat(amount());
+    return Number.isFinite(a) && a > 0 && a < MIN_SWAP_USD;
   });
 
   function startQuoteAge() {
@@ -429,6 +439,9 @@ const SwapPage: Component = () => {
                   Balance: <b class={s.balanceMax} onClick={setMax}>{fromBalance()} USDC</b>
                 </div>
               </Show>
+              <Show when={belowMinimum()}>
+                <div class={s.usdValue}>Minimum swap is ${MIN_SWAP_USD}</div>
+              </Show>
             </div>
           </div>
 
@@ -516,11 +529,13 @@ const SwapPage: Component = () => {
             ? "Submitting..."
             : !fromChain() || !toChain()
               ? "Select chains"
-              : quoting()
-                ? "Getting price..."
-                : quoteData()
-                  ? "Swap"
-                  : "Enter amount"}
+              : belowMinimum()
+                ? `Minimum $${MIN_SWAP_USD}`
+                : quoting()
+                  ? "Getting price..."
+                  : quoteData()
+                    ? "Swap"
+                    : "Enter amount"}
         </button>
       </Show>
 
