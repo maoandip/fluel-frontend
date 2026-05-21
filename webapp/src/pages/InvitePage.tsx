@@ -3,6 +3,7 @@ import { createAsync, revalidate } from "@solidjs/router";
 import { useApp } from "../stores/app";
 import { showToast } from "../stores/toast";
 import { haptic } from "../lib/telegram";
+import { copyToClipboard } from "../lib/clipboard";
 import { postGift } from "../api";
 import EmptyState from "../components/ui/EmptyState";
 import Skeleton from "../components/ui/Skeleton";
@@ -37,10 +38,7 @@ const InvitePage: Component = () => {
   };
 
   function copyRefLink() {
-    const stats = refStats();
-    if (!stats?.refLink) return;
-    navigator.clipboard.writeText(stats.refLink).then(() => { haptic("success"); showToast("Referral link copied"); })
-      .catch(() => showToast("Failed to copy"));
+    void copyToClipboard(refStats()?.refLink ?? "", "Referral link copied");
   }
 
   function shareRefLink() {
@@ -62,9 +60,7 @@ const InvitePage: Component = () => {
   }
 
   function copyLink(link: string) {
-    if (!link) return;
-    navigator.clipboard.writeText(link).then(() => { haptic("success"); showToast("Gift link copied"); })
-      .catch(() => showToast("Failed to copy"));
+    void copyToClipboard(link, "Gift link copied");
   }
 
   function shareLink(link: string) {

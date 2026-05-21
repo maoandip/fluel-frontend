@@ -4,8 +4,7 @@ import type { HistoryTx } from "../api";
 import { queries } from "../lib/queries";
 import { revalidateNow } from "../lib/refresh";
 import { useApp } from "../stores/app";
-import { showToast } from "../stores/toast";
-import { haptic } from "../lib/telegram";
+import { copyToClipboard } from "../lib/clipboard";
 import EmptyState from "../components/ui/EmptyState";
 import Skeleton from "../components/ui/Skeleton";
 import QueryErrorFallback from "../components/ui/QueryErrorFallback";
@@ -102,9 +101,7 @@ const HistoryPage: Component = () => {
   }
 
   function copyHash(hash: string) {
-    navigator.clipboard.writeText(hash)
-      .then(() => { haptic("success"); showToast("Transaction hash copied"); })
-      .catch(() => showToast("Failed to copy"));
+    void copyToClipboard(hash, "Transaction hash copied");
   }
 
   return (

@@ -1,6 +1,5 @@
 import { useApp } from "../../stores/app";
-import { haptic } from "../../lib/telegram";
-import { showToast } from "../../stores/toast";
+import { copyToClipboard } from "../../lib/clipboard";
 import s from "./WalletBar.module.css";
 
 function truncateAddress(addr: string): string {
@@ -11,16 +10,8 @@ function truncateAddress(addr: string): string {
 export default function WalletBar() {
   const { walletAddress } = useApp();
 
-  async function handleCopy() {
-    const addr = walletAddress();
-    if (!addr) return;
-    try {
-      await navigator.clipboard.writeText(addr);
-      haptic("light");
-      showToast("Deposit address copied");
-    } catch {
-      showToast("Failed to copy");
-    }
+  function handleCopy() {
+    void copyToClipboard(walletAddress(), "Deposit address copied");
   }
 
   return (

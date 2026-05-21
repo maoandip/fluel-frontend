@@ -51,11 +51,6 @@
   color: var(--c-text);
 }
 
-.statValueAccent {
-  composes: statValue;
-  color: var(--c-accent);
-}
-
 .linkBox {
   display: flex;
   align-items: center;

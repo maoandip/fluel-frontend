@@ -5,6 +5,7 @@ import { useApp } from "../stores/app";
 import { balancesQuery } from "../stores/balances";
 import { inFlightSwaps, inFlightUsdc, trackSwap } from "../stores/swaps";
 import { showToast } from "../stores/toast";
+import { copyToClipboard } from "../lib/clipboard";
 import { postQuote, postConfirm } from "../api";
 import { haptic } from "../lib/telegram";
 import { NATIVE_TOKEN } from "../types";
@@ -307,17 +308,9 @@ const SwapPage: Component = () => {
 
   const isValidAddress = (addr: string) => /^0x[0-9a-fA-F]{40}$/.test(addr);
 
-  async function copyDestination(e: MouseEvent) {
+  function copyDestination(e: MouseEvent) {
     e.stopPropagation();
-    const addr = destinationAddress();
-    if (!addr) return;
-    try {
-      await navigator.clipboard.writeText(addr);
-      haptic("light");
-      showToast("Destination address copied");
-    } catch {
-      showToast("Failed to copy");
-    }
+    void copyToClipboard(destinationAddress(), "Destination address copied");
   }
 
   async function saveDestination() {

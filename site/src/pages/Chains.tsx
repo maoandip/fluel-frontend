@@ -6,6 +6,7 @@ import CtaButton from "../components/CtaButton";
 import AsyncSection from "../components/AsyncSection";
 import { getPrices } from "../lib/queries";
 import { useCanonical } from "../lib/seo";
+import { fmtGwei, gweiLevel, cardLevelClass, gweiLevelClass } from "../lib/gas";
 
 interface ChainInfo {
   id: number;
@@ -13,36 +14,6 @@ interface ChainInfo {
   icon?: string;
   gwei: number | null;
 }
-
-function fmtGwei(g: number): string {
-  if (g >= 1) return g.toFixed(1);
-  if (g >= 0.1) return g.toFixed(2);
-
-  const str = g.toFixed(12).replace(/0+$/, "");
-  const match = str.match(/^0\.(0*)(\d{1,3})/);
-  if (!match) return g.toPrecision(3);
-
-  const leadingZeros = match[1].length;
-  const significant = match[2];
-
-  if (leadingZeros === 0) return `0.${significant}`;
-
-  const subscriptDigits = "\u2080\u2081\u2082\u2083\u2084\u2085\u2086\u2087\u2088\u2089";
-  const subscript = String(leadingZeros)
-    .split("")
-    .map((d) => subscriptDigits[parseInt(d)])
-    .join("");
-  return `0.0${subscript}${significant}`;
-}
-
-function gweiLevel(g: number): "low" | "mid" | "high" {
-  if (g < 10) return "low";
-  if (g < 50) return "mid";
-  return "high";
-}
-
-const cardLevelClass = { low: "cardLow", mid: "cardMid", high: "cardHigh" } as const;
-const gweiLevelClass = { low: "gweiLow", mid: "gweiMid", high: "gweiHigh" } as const;
 
 // Data-dependent grid. Lives inside AsyncSection so a failed /prices fetch
 // only breaks this block — the surrounding hero, controls, legend, info,

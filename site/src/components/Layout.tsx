@@ -123,5 +123,3 @@ export default function Layout(props: { children?: JSX.Element }) {
     </div>
   );
 }
-
-export { Logo };
