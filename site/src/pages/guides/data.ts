@@ -14,13 +14,13 @@ export const guides: Guide[] = [
     slug: "how-to-get-gas-on-any-chain",
     publishedAt: "2026-04-14",
     title: "How to Get Gas on Any Chain with USDC",
-    description: "Stop struggling with bridges. Get native gas tokens on Ethereum, Arbitrum, Base, Polygon, and 60+ chains using USDC via Telegram.",
+    description: "Stop struggling with bridges. Get native gas tokens on Ethereum, Arbitrum, Base, Polygon, and 40+ chains using USDC via Telegram.",
     keywords: "get gas tokens, buy gas with USDC, cross-chain gas, crypto gas tokens",
     category: "getting-started",
     sections: [
       {
         heading: "The gas problem",
-        body: "Every blockchain transaction needs gas — the native token used to pay network fees. ETH on Ethereum, MATIC on Polygon, AVAX on Avalanche. Without it, you can't do anything: no swaps, no mints, no transfers. And getting gas on a new chain usually means finding a bridge, swapping on a DEX, or buying from an exchange. That's friction you don't need."
+        body: "Every blockchain transaction needs gas — the native token used to pay network fees. ETH on Ethereum, POL on Polygon, AVAX on Avalanche. Without it, you can't do anything: no swaps, no mints, no transfers. And getting gas on a new chain usually means finding a bridge, swapping on a DEX, or buying from an exchange. That's friction you don't need."
       },
       {
         heading: "The Fluel solution",
@@ -28,15 +28,15 @@ export const guides: Guide[] = [
       },
       {
         heading: "How it works",
-        body: "1. Open the Fluel Telegram bot and type /start.\n2. Set your destination wallet with /setwallet 0xYourAddress.\n3. Deposit USDC to your Fluel deposit address.\n4. Type /gas 5 base arbitrum to get a quote.\n5. Type /confirm to execute. Gas arrives in your wallet within seconds."
+        body: "1. Open the Fluel Telegram bot and type /start.\n2. Set your destination wallet with /setwallet 0xYourAddress.\n3. Deposit USDC to your Fluel deposit address.\n4. Type /gas 10 base arbitrum to get a quote.\n5. Type /confirm to execute. Gas arrives in your wallet within seconds."
       },
       {
         heading: "Supported chains",
-        body: "Fluel supports 61+ EVM chains including Ethereum, Arbitrum, Base, Optimism, Polygon, Avalanche, BSC, zkSync, Mantle, Scroll, Linea, Mode, and many more. The full list updates automatically from Li.Fi's cross-chain protocol."
+        body: "Fluel supports 40+ EVM chains including Ethereum, Arbitrum, Base, Optimism, Polygon, Avalanche, BSC, zkSync, Mantle, Scroll, Linea, Mode, and many more. The full list updates automatically from Li.Fi's cross-chain protocol."
       },
       {
         heading: "Fees",
-        body: "Transparent, volume-based pricing. $0–10: 2.5%. $10–100: 1.5%. $100–500: 1.0%. $500+: 0.75%, with a $0.50 minimum fee per swap. The exact fee is always shown before you confirm. Your first swap is free (up to $50) if you join via a referral link."
+        body: "Transparent, volume-based pricing. Swaps start at $10. $10–100: 1.5%. $100–500: 1.0%. $500+: 0.75%, with a $0.50 minimum fee per swap. The exact fee is always shown before you confirm. Your first swap is free (up to $50) if you join via a referral link."
       }
     ]
   },
@@ -50,7 +50,7 @@ export const guides: Guide[] = [
     sections: [
       {
         heading: "You're not alone",
-        body: "It's one of crypto's most common frustrations. You bridge USDC or an NFT to a new chain, only to realize you can't do anything because you don't have the native gas token. No ETH on Arbitrum. No MATIC on Polygon. No AVAX on Avalanche. Your tokens are there, but they're useless without gas."
+        body: "It's one of crypto's most common frustrations. You bridge USDC or an NFT to a new chain, only to realize you can't do anything because you don't have the native gas token. No ETH on Arbitrum. No POL on Polygon. No AVAX on Avalanche. Your tokens are there, but they're useless without gas."
       },
       {
         heading: "The usual workarounds (and why they're painful)",
@@ -62,11 +62,11 @@ export const guides: Guide[] = [
       },
       {
         heading: "Step by step",
-        body: "1. Open @fluelbot on Telegram.\n2. Type /start to create your wallet.\n3. Set your destination: /setwallet 0xYourStuckWallet\n4. Deposit USDC to your Fluel address (from any chain where you DO have gas).\n5. Type /gas 2 base (or whatever chain you're stuck on).\n6. Confirm. Gas arrives in seconds."
+        body: "1. Open @fluelbot on Telegram.\n2. Type /start to create your wallet.\n3. Set your destination: /setwallet 0xYourStuckWallet\n4. Deposit USDC to your Fluel address (from any chain where you DO have gas).\n5. Type /gas 10 base (or whatever chain you're stuck on).\n6. Confirm. Gas arrives in seconds."
       },
       {
         heading: "Pro tip",
-        body: "Keep $5–10 USDC in your Fluel wallet at all times. When you get stuck on a new chain, you can get gas instantly without having to find a bridge or exchange. Think of it as a prepaid gas card for all of crypto."
+        body: "Keep $10–20 USDC in your Fluel wallet at all times. When you get stuck on a new chain, you can get gas instantly without having to find a bridge or exchange. Think of it as a prepaid gas card for all of crypto."
       }
     ]
   },
@@ -92,7 +92,7 @@ export const guides: Guide[] = [
       },
       {
         heading: "Option 3: Fluel",
-        body: "Deposit USDC once, get gas on any chain via Telegram. Cost: a $10 swap is $0.50 (the minimum fee); larger swaps are 0.75–2.5% volume-based. Gas arrives in seconds. No source chain gas needed — fluel covers the transaction fees. For small gas amounts ($1–20), this is the cheapest option."
+        body: "Deposit USDC once, get gas on any chain via Telegram. Cost: a $10 swap is $0.50 (the minimum fee); larger swaps are 0.75–1.5% volume-based. Gas arrives in seconds. No source chain gas needed — fluel covers the transaction fees. For small gas amounts, this is the cheapest option."
       },
       {
         heading: "When to use what",
@@ -118,7 +118,7 @@ export const guides: Guide[] = [
       },
       {
         heading: "Getting ETH on Base with fluel",
-        body: "1. Open @fluelbot on Telegram.\n2. Deposit USDC to your Fluel wallet (from any chain).\n3. Type /gas 2 arbitrum base\n4. Confirm. ETH arrives on Base in seconds.\n\nYou can swap from USDC on any chain — Arbitrum, Polygon, Ethereum, BSC — and receive ETH on Base. fluel uses Li.Fi to find the cheapest route automatically."
+        body: "1. Open @fluelbot on Telegram.\n2. Deposit USDC to your Fluel wallet (from any chain).\n3. Type /gas 10 arbitrum base\n4. Confirm. ETH arrives on Base in seconds.\n\nYou can swap from USDC on any chain — Arbitrum, Polygon, Ethereum, BSC — and receive ETH on Base. fluel uses Li.Fi to find the cheapest route automatically."
       },
       {
         heading: "How much gas do you need on Base?",
@@ -144,7 +144,7 @@ export const guides: Guide[] = [
       },
       {
         heading: "Faster: fluel",
-        body: "Deposit USDC to fluel from any chain. Type /gas 5 base arbitrum (or from any other chain). Gas arrives on Arbitrum in under 30 seconds. No bridge UI. No gas on the source chain. Just a Telegram command."
+        body: "Deposit USDC to fluel from any chain. Type /gas 10 base arbitrum (or from any other chain). Gas arrives on Arbitrum in under 30 seconds. No bridge UI. No gas on the source chain. Just a Telegram command."
       },
       {
         heading: "Recommended gas amount",
@@ -196,7 +196,7 @@ export const guides: Guide[] = [
       },
       {
         heading: "Getting ETH on Optimism with fluel",
-        body: "1. Open the fluel Telegram bot and type /start.\n2. Set your destination wallet: /setwallet 0xYourAddress\n3. Deposit USDC to your fluel wallet from any chain you already use.\n4. Type /gas 3 base optimism (swap $3 of USDC on Base into ETH on Optimism).\n5. Type /confirm. ETH lands on Optimism in seconds — no source-chain gas required, because fluel covers the transaction fees."
+        body: "1. Open the fluel Telegram bot and type /start.\n2. Set your destination wallet: /setwallet 0xYourAddress\n3. Deposit USDC to your fluel wallet from any chain you already use.\n4. Type /gas 10 base optimism (swap $10 of USDC on Base into ETH on Optimism).\n5. Type /confirm. ETH lands on Optimism in seconds — no source-chain gas required, because fluel covers the transaction fees."
       },
       {
         heading: "How much ETH you need on Optimism",
@@ -222,7 +222,7 @@ export const guides: Guide[] = [
       },
       {
         heading: "Getting POL with fluel",
-        body: "1. Open the fluel Telegram bot and type /start.\n2. Set your destination: /setwallet 0xYourAddress\n3. Deposit USDC from any chain.\n4. Type /gas 2 arbitrum polygon to swap $2 of USDC into POL on Polygon.\n5. Confirm. POL arrives in your wallet in seconds, with no POL needed up front."
+        body: "1. Open the fluel Telegram bot and type /start.\n2. Set your destination: /setwallet 0xYourAddress\n3. Deposit USDC from any chain.\n4. Type /gas 10 arbitrum polygon to swap $10 of USDC into POL on Polygon.\n5. Confirm. POL arrives in your wallet in seconds, with no POL needed up front."
       },
       {
         heading: "How much POL to get",
@@ -248,7 +248,7 @@ export const guides: Guide[] = [
       },
       {
         heading: "Getting AVAX with fluel",
-        body: "1. Open the fluel Telegram bot and type /start.\n2. Set your destination: /setwallet 0xYourAddress\n3. Deposit USDC from any chain you already use.\n4. Type /gas 4 base avalanche to swap $4 of USDC into AVAX.\n5. Confirm. AVAX arrives on the C-Chain in seconds — fluel covers the transaction fees, so you need no AVAX to begin."
+        body: "1. Open the fluel Telegram bot and type /start.\n2. Set your destination: /setwallet 0xYourAddress\n3. Deposit USDC from any chain you already use.\n4. Type /gas 10 base avalanche to swap $10 of USDC into AVAX.\n5. Confirm. AVAX arrives on the C-Chain in seconds — fluel covers the transaction fees, so you need no AVAX to begin."
       },
       {
         heading: "How much AVAX you need",
@@ -274,7 +274,7 @@ export const guides: Guide[] = [
       },
       {
         heading: "Getting BNB with fluel",
-        body: "1. Open the fluel Telegram bot and type /start.\n2. Set your destination: /setwallet 0xYourAddress\n3. Deposit USDC from any chain.\n4. Type /gas 3 polygon bnb to swap $3 of USDC into BNB.\n5. Confirm. BNB arrives in seconds — no exchange account, no source-chain gas."
+        body: "1. Open the fluel Telegram bot and type /start.\n2. Set your destination: /setwallet 0xYourAddress\n3. Deposit USDC from any chain.\n4. Type /gas 10 polygon bnb to swap $10 of USDC into BNB.\n5. Confirm. BNB arrives in seconds — no exchange account, no source-chain gas."
       },
       {
         heading: "How much BNB you need",
@@ -300,7 +300,7 @@ export const guides: Guide[] = [
       },
       {
         heading: "Fixing it with fluel",
-        body: "1. Open the fluel Telegram bot and type /start.\n2. Set your destination to the wallet eligible for the airdrop: /setwallet 0xYourAddress\n3. Deposit USDC from any chain where you already have funds.\n4. Type /gas 2 base arbitrum — amount, source chain, and the chain the airdrop is on.\n5. Confirm. Native gas lands in your wallet in seconds, and you can claim."
+        body: "1. Open the fluel Telegram bot and type /start.\n2. Set your destination to the wallet eligible for the airdrop: /setwallet 0xYourAddress\n3. Deposit USDC from any chain where you already have funds.\n4. Type /gas 10 base arbitrum — amount, source chain, and the chain the airdrop is on.\n5. Confirm. Native gas lands in your wallet in seconds, and you can claim."
       },
       {
         heading: "Beat the claim deadline",

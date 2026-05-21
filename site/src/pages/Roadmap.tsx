@@ -54,7 +54,7 @@ const phases: Phase[] = [
   },
   {
     label: "Phase 4",
-    status: "next",
+    status: "current",
     title: "Solana",
     items: [
       "Swap to SOL on Solana",
