@@ -47,7 +47,7 @@ export default function Terms() {
       </Section>
 
       <Section title="7. Fees and Charges">
-        <p>Fluel charges a service fee on each swap transaction. Fees are volume-based and range from approximately 0.75% to 2.5% of the swap amount, subject to a minimum fee of $0.50 per swap. The fee is applied to the transaction amount before the swap is submitted to the underlying protocol.</p>
+        <p>Fluel charges a service fee on each swap transaction: a volume-based rate of approximately 0.75% to 2.5% of the swap amount depending on size, or a minimum of $0.50 per swap, whichever is greater. On the smallest swaps the $0.50 minimum applies and the effective percentage is therefore higher than the tier rate. The exact fee is shown in the quote before you confirm, and is applied before the swap is submitted to the underlying protocol.</p>
         <p>Additional costs may apply including network gas fees, bridge protocol fees, and liquidity provider fees, which are determined by the underlying protocols and blockchain networks. These are not set or controlled by Fluel and are displayed in the swap quote before you confirm.</p>
       </Section>
 
