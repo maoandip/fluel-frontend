@@ -177,5 +177,135 @@ export const guides: Guide[] = [
         body: "If you're moving large amounts ($1000+) of specific tokens, a direct bridge is more cost-effective. fluel is optimized for gas amounts — $1 to $500 of native tokens. For that use case, it's faster, cheaper, and simpler than any bridge UI."
       }
     ]
+  },
+  {
+    slug: "how-to-get-gas-on-optimism",
+    publishedAt: "2026-05-21",
+    title: "How to Get Gas on Optimism",
+    description: "Get ETH for gas on Optimism (OP Mainnet) instantly using USDC. No mainnet bridge fees. Swap from any chain via Telegram.",
+    keywords: "Optimism gas, get ETH on Optimism, OP Mainnet gas, Optimism gas fees, Optimism bridge",
+    category: "chain",
+    sections: [
+      {
+        heading: "Optimism runs on ETH",
+        body: "Optimism (OP Mainnet) is one of Ethereum's leading Layer 2 networks. Every transaction is paid for in ETH — not OP. OP is the governance token; it does not pay gas. Fees are typically $0.01–0.05 per transaction, but with zero ETH in your wallet you can't transact at all."
+      },
+      {
+        heading: "The usual ways to get ETH on Optimism",
+        body: "Bridge from Ethereum mainnet using the Optimism Gateway — instant to deposit, but you pay mainnet gas ($5–15). Use a third-party bridge like Hop or Across — faster, but you still need gas on the source chain. Or withdraw ETH from a centralized exchange that supports Optimism, which means an account, verification, and a withdrawal fee."
+      },
+      {
+        heading: "Getting ETH on Optimism with fluel",
+        body: "1. Open the fluel Telegram bot and type /start.\n2. Set your destination wallet: /setwallet 0xYourAddress\n3. Deposit USDC to your fluel wallet from any chain you already use.\n4. Type /gas 3 base optimism (swap $3 of USDC on Base into ETH on Optimism).\n5. Type /confirm. ETH lands on Optimism in seconds — no source-chain gas required, because fluel covers the transaction fees."
+      },
+      {
+        heading: "How much ETH you need on Optimism",
+        body: "Optimism gas is cheap. $2–5 of ETH covers weeks of normal usage — swaps, transfers, NFT mints. Heavy DeFi users might keep $10–20. The ETH is delivered straight to your own wallet, so you can use it immediately with any dApp."
+      }
+    ]
+  },
+  {
+    slug: "how-to-get-gas-on-polygon",
+    publishedAt: "2026-05-21",
+    title: "How to Get Gas on Polygon",
+    description: "Get POL for gas on Polygon instantly using USDC. No bridge needed. Swap from Ethereum, Base, Arbitrum, or any chain via Telegram.",
+    keywords: "Polygon gas, get POL for gas, MATIC gas, Polygon gas fees, Polygon bridge, POL token",
+    category: "chain",
+    sections: [
+      {
+        heading: "Polygon uses POL for gas",
+        body: "The Polygon PoS network pays gas in POL — the token that replaced MATIC in 2024. Every transaction needs it. Polygon gas is famously cheap, often a fraction of a cent, but a wallet with no POL still can't move."
+      },
+      {
+        heading: "Getting POL the traditional way",
+        body: "Bridge from Ethereum via the Polygon Portal — but that costs Ethereum mainnet gas. Withdraw POL from a centralized exchange — account and withdrawal fee required. Or swap for it on a Polygon DEX — which only works if you already have POL to pay the swap fee. That last one is the catch most people hit."
+      },
+      {
+        heading: "Getting POL with fluel",
+        body: "1. Open the fluel Telegram bot and type /start.\n2. Set your destination: /setwallet 0xYourAddress\n3. Deposit USDC from any chain.\n4. Type /gas 2 arbitrum polygon to swap $2 of USDC into POL on Polygon.\n5. Confirm. POL arrives in your wallet in seconds, with no POL needed up front."
+      },
+      {
+        heading: "How much POL to get",
+        body: "Because Polygon fees are so low, even $1–2 of POL lasts a long time — typically hundreds of transactions. There's rarely a reason to hold more than $5 of POL just for gas."
+      }
+    ]
+  },
+  {
+    slug: "how-to-get-gas-on-avalanche",
+    publishedAt: "2026-05-21",
+    title: "How to Get Gas on Avalanche",
+    description: "Get AVAX for gas on the Avalanche C-Chain instantly using USDC. No bridge required. Swap from any chain via Telegram.",
+    keywords: "Avalanche gas, get AVAX for gas, AVAX gas fees, Avalanche C-Chain gas, Avalanche bridge",
+    category: "chain",
+    sections: [
+      {
+        heading: "Avalanche needs AVAX",
+        body: "The Avalanche C-Chain — the EVM-compatible chain where almost all Avalanche DeFi and NFTs live — pays gas in AVAX. Without AVAX in your wallet, you can't swap, transfer, or claim anything, even if you hold other tokens on the chain."
+      },
+      {
+        heading: "The traditional routes",
+        body: "Bridge to Avalanche using the official Avalanche Bridge or a third-party route — both need gas on the source chain to start. Or buy AVAX on a centralized exchange and withdraw it to the C-Chain, which means an account, verification, and a withdrawal fee that can dwarf the small amount of gas you actually need."
+      },
+      {
+        heading: "Getting AVAX with fluel",
+        body: "1. Open the fluel Telegram bot and type /start.\n2. Set your destination: /setwallet 0xYourAddress\n3. Deposit USDC from any chain you already use.\n4. Type /gas 4 base avalanche to swap $4 of USDC into AVAX.\n5. Confirm. AVAX arrives on the C-Chain in seconds — fluel covers the transaction fees, so you need no AVAX to begin."
+      },
+      {
+        heading: "How much AVAX you need",
+        body: "Avalanche gas is low but slightly higher than the cheapest L2s. $3–8 of AVAX comfortably covers weeks of typical activity. Keep more only if you're an active DeFi user or minting frequently."
+      }
+    ]
+  },
+  {
+    slug: "how-to-get-gas-on-bnb-chain",
+    publishedAt: "2026-05-21",
+    title: "How to Get Gas on BNB Chain",
+    description: "Get BNB for gas on BNB Chain (BSC) instantly using USDC. No bridge and no Binance account needed. Swap via Telegram.",
+    keywords: "BNB Chain gas, get BNB for gas, BSC gas, Binance Smart Chain gas, BNB gas fees",
+    category: "chain",
+    sections: [
+      {
+        heading: "BNB Chain runs on BNB",
+        body: "BNB Chain — still widely called BSC, or Binance Smart Chain — pays gas in BNB. Every swap, transfer, or contract call needs it. Fees are usually a few cents, but a wallet holding only USDC or tokens still can't transact without a little BNB."
+      },
+      {
+        heading: "The usual ways to get BNB",
+        body: "Withdraw BNB from Binance or another exchange — the obvious route, but it needs an account, identity verification, and a withdrawal fee. Or bridge to BNB Chain from another network — which requires gas on the source chain to start. Neither is convenient when you just need a couple of dollars of gas."
+      },
+      {
+        heading: "Getting BNB with fluel",
+        body: "1. Open the fluel Telegram bot and type /start.\n2. Set your destination: /setwallet 0xYourAddress\n3. Deposit USDC from any chain.\n4. Type /gas 3 polygon bnb to swap $3 of USDC into BNB.\n5. Confirm. BNB arrives in seconds — no exchange account, no source-chain gas."
+      },
+      {
+        heading: "How much BNB you need",
+        body: "BNB Chain fees are low. $3–5 of BNB covers weeks of normal usage. Active traders may prefer $10–20, but for getting un-stuck and transacting again, a few dollars is plenty."
+      }
+    ]
+  },
+  {
+    slug: "no-gas-to-claim-airdrop",
+    publishedAt: "2026-05-21",
+    title: "No Gas to Claim an Airdrop? Here's the Fix",
+    description: "Eligible for an airdrop but can't claim it because you have no gas on that chain? Get native gas in seconds with USDC — before the window closes.",
+    keywords: "no gas to claim airdrop, claim airdrop no gas, airdrop gas fees, can't claim airdrop, airdrop stuck no gas",
+    category: "troubleshooting",
+    sections: [
+      {
+        heading: "The airdrop catch-22",
+        body: "You qualified for an airdrop — but it's on a chain where your wallet has zero gas. Claiming an airdrop is an on-chain transaction, and every transaction needs the native gas token. No gas means no claim, even though the tokens are sitting right there waiting for you."
+      },
+      {
+        heading: "Why this happens constantly",
+        body: "Airdrops reward activity, and that activity is often spread across chains you rarely touch. The claim contract lives on one specific network — an L2, an alt-L1 — and if you've never transacted there, you have no ETH, no POL, no AVAX to pay the claim fee. It's one of the most common ways people miss out on tokens they earned."
+      },
+      {
+        heading: "Fixing it with fluel",
+        body: "1. Open the fluel Telegram bot and type /start.\n2. Set your destination to the wallet eligible for the airdrop: /setwallet 0xYourAddress\n3. Deposit USDC from any chain where you already have funds.\n4. Type /gas 2 base arbitrum — amount, source chain, and the chain the airdrop is on.\n5. Confirm. Native gas lands in your wallet in seconds, and you can claim."
+      },
+      {
+        heading: "Beat the claim deadline",
+        body: "Most airdrops have a claim window — miss it and the tokens are gone. fluel delivers gas in seconds rather than the 10–30 minutes a CEX withdrawal or bridge can take, so a closing deadline isn't a problem. A good habit: keep a small USDC balance in fluel as a standing gas buffer, so the next surprise airdrop is never blocked."
+      }
+    ]
   }
 ];
