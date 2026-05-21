@@ -135,7 +135,10 @@ const BalancesPage: Component = () => {
       haptic("success");
       showToast(`Withdrawn: ${summary}`);
       setSelectedChains(new Set<number>());
-      refetchBalances();
+      // Await the refetch so the "Withdrawing..." state stays until the
+      // displayed balance reflects the withdrawal — the backend drops the
+      // wallet's balance cache on withdraw, so this returns fresh data.
+      await refetchBalances();
     } catch (err: any) {
       showToast(err.message || "Withdraw failed");
       haptic("error");
