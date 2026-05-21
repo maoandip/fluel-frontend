@@ -132,7 +132,7 @@ export default function HowItWorks() {
                 a leading cross-chain aggregator trusted by major DeFi protocols — which finds the best route across bridges and DEXs and executes the swap on-chain.
                 Native gas tokens are delivered directly to your destination wallet, typically within 30 seconds to 2 minutes depending on the chains involved.
               </p>
-              <code>/gas 5 base arbitrum</code>
+              <code>/gas 10 base arbitrum</code>
             </div>
           </div>
 

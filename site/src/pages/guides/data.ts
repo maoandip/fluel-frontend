@@ -122,7 +122,7 @@ export const guides: Guide[] = [
       },
       {
         heading: "How much gas do you need on Base?",
-        body: "Base gas is extremely cheap. $0.50 of ETH will cover hundreds of transactions. A $2 swap gives you enough gas for weeks of typical usage. Unless you're deploying contracts, you'll rarely need more than $5 of ETH on Base."
+        body: "Base gas is extremely cheap. $0.50 of ETH will cover hundreds of transactions. A single swap at fluel's $10 minimum leaves you with months of gas for typical usage. Unless you're deploying contracts, you won't need more."
       }
     ]
   },
@@ -174,7 +174,7 @@ export const guides: Guide[] = [
       },
       {
         heading: "When to still use a bridge",
-        body: "If you're moving large amounts ($1000+) of specific tokens, a direct bridge is more cost-effective. fluel is optimized for gas amounts — $1 to $500 of native tokens. For that use case, it's faster, cheaper, and simpler than any bridge UI."
+        body: "If you're moving large amounts ($1000+) of specific tokens, a direct bridge is more cost-effective. fluel is optimized for gas amounts — $10 to $500 of native tokens. For that use case, it's faster, cheaper, and simpler than any bridge UI."
       }
     ]
   },
