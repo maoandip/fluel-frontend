@@ -11,8 +11,11 @@ export default defineConfig({
     cssCodeSplit: true,
     rollupOptions: {
       output: {
-        manualChunks: {
-          "solid": ["solid-js", "solid-js/web"],
+        // Split Solid into its own chunk for long-term caching. Vite 8's
+        // Rolldown bundler only accepts manualChunks as a function, not the
+        // object form.
+        manualChunks: (id) => {
+          if (id.includes("node_modules/solid-js")) return "solid";
         },
       },
     },
